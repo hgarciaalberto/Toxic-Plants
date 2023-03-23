@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -40,7 +41,7 @@ fun ToxicPlantScreen(viewModel: MainViewModel = viewModel()) {
 @Composable
 fun ToxicPlantContent(message: String) {
 
-    Text(text = message)
+    Text(modifier = Modifier.fillMaxWidth(), text = message)
 }
 
 @Preview(showBackground = true)
