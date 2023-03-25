@@ -1,7 +1,6 @@
 package com.waracle.vision.toxicplants
 
 import android.app.Application
-import android.graphics.BitmapFactory
 import androidx.lifecycle.AndroidViewModel
 import com.google.firebase.ml.modeldownloader.CustomModelDownloadConditions
 import com.google.firebase.ml.modeldownloader.DownloadType
@@ -14,7 +13,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private lateinit var plantDetector: PlantDetector
 
     val message = MutableStateFlow("Waiting")
-
 
     init {
         val conditions = CustomModelDownloadConditions.Builder().build()
@@ -29,11 +27,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     message.value = "Downloaded remote model: ${model.name}"
                     plantDetector = PlantDetector(model)
 
-                    application.resources.openRawResource(R.raw.plant).let { stream ->
-                        BitmapFactory.decodeStream(stream)?.let { bitmap ->
-                            plantDetector.processImage(bitmap)
-                        }
-                    }
+//                    application.resources.openRawResource(R.raw.plant).let { stream ->
+//                        BitmapFactory.decodeStream(stream)?.let { bitmap ->
+//                            plantDetector.processImage(bitmap)
+//                        }
+//                    }
                 }
             }
             .addOnFailureListener {
