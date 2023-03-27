@@ -3,19 +3,26 @@
 package com.waracle.vision.toxicplants.camera.video
 
 import android.Manifest
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Size
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.TorchState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
@@ -28,9 +35,11 @@ internal fun RecordingScreen(
     recordingViewModel: RecordingViewModel = viewModel(factory = factory),
     onShowMessage: (message: Int) -> Unit
 ) {
-    val state by recordingViewModel.state.collectAsState()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val state by recordingViewModel.state.collectAsState()
+    val message by recordingViewModel.message.collectAsStateWithLifecycle()
 
     val listener = remember(recordingViewModel) {
         object : VideoCaptureManager.Listener {
@@ -53,6 +62,11 @@ internal fun RecordingScreen(
             override fun onError(throwable: Throwable?) {
                 recordingViewModel.onEvent(RecordingViewModel.Event.Error(throwable))
             }
+
+            override fun processFrame(bitmap: Bitmap?) {
+                bitmap?.let { recordingViewModel.analiseImage(it) }
+
+            }
         }
     }
 
@@ -68,6 +82,7 @@ internal fun RecordingScreen(
 
     CompositionLocalProvider(LocalVideoCaptureManager provides captureManager) {
         VideoScreenContent(
+            message = message,
             allPermissionsGranted = state.multiplePermissionsState?.allPermissionsGranted ?: false,
             cameraLens = state.lens,
             torchState = state.torchState,
@@ -95,6 +110,7 @@ internal fun RecordingScreen(
 
 @Composable
 private fun VideoScreenContent(
+    message: String,
     allPermissionsGranted: Boolean,
     cameraLens: Int?,
     @TorchState.State torchState: Int,
@@ -110,6 +126,7 @@ private fun VideoScreenContent(
         }
     } else {
         Box(modifier = Modifier.fillMaxSize()) {
+
             cameraLens?.let {
                 CameraPreview(lens = it, torchState = torchState)
                 if (recordingStatus == RecordingViewModel.RecordingStatus.Idle) {
@@ -127,16 +144,28 @@ private fun VideoScreenContent(
                         seconds = recordedLength
                     )
                 }
-                RecordFooter(
-                    modifier = Modifier.align(Alignment.BottomStart),
-                    recordingStatus = recordingStatus,
-                    showFlipIcon = hasDualCamera,
-                    onRecordTapped = { onEvent(RecordingViewModel.Event.RecordTapped) },
-                    onPauseTapped = { onEvent(RecordingViewModel.Event.PauseTapped) },
-                    onResumeTapped = { onEvent(RecordingViewModel.Event.ResumeTapped) },
-                    onStopTapped = { onEvent(RecordingViewModel.Event.StopTapped) },
-                    onFlipTapped = { onEvent(RecordingViewModel.Event.FlipTapped) }
+
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .background(Color.White)
+                        .fillMaxWidth()
+                        .padding(10.dp, 10.dp, 10.dp, 15.dp),
+                    text = message,
+                    textAlign = TextAlign.Center,
+                    fontSize = 16.sp
                 )
+
+//                RecordFooter(
+//                    modifier = Modifier.align(Alignment.BottomStart),
+//                    recordingStatus = recordingStatus,
+//                    showFlipIcon = hasDualCamera,
+//                    onRecordTapped = { onEvent(RecordingViewModel.Event.RecordTapped) },
+//                    onPauseTapped = { onEvent(RecordingViewModel.Event.PauseTapped) },
+//                    onResumeTapped = { onEvent(RecordingViewModel.Event.ResumeTapped) },
+//                    onStopTapped = { onEvent(RecordingViewModel.Event.StopTapped) },
+//                    onFlipTapped = { onEvent(RecordingViewModel.Event.FlipTapped) }
+//                )
             }
         }
     }

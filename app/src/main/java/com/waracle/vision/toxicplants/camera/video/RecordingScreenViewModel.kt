@@ -2,6 +2,7 @@
 
 package com.waracle.vision.toxicplants.camera.video
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import androidx.camera.core.CameraInfo
@@ -13,7 +14,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
+import com.waracle.vision.toxicplants.PlantDetector
 import com.waracle.vision.toxicplants.R
+import com.waracle.vision.toxicplants.camera.rotate
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -24,11 +27,15 @@ class RecordingViewModel constructor(
     val permissionsHandler: PermissionsHandler
 ) : ViewModel() {
 
+    private val plantDetector by lazy { PlantDetector() }
+
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state
 
     private val _effect = MutableSharedFlow<Effect>()
     val effect: SharedFlow<Effect> = _effect
+
+    val message = MutableStateFlow("Waiting")
 
     init {
         permissionsHandler
@@ -166,6 +173,12 @@ class RecordingViewModel constructor(
                     lensInfo = cameraLensInfo
                 )
             }
+        }
+    }
+
+    fun analiseImage(bitmap: Bitmap) {
+        plantDetector.processImage(bitmap.rotate()).let {
+            message.value = it
         }
     }
 

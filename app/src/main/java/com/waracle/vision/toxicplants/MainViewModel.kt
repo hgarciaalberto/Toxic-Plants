@@ -3,47 +3,23 @@ package com.waracle.vision.toxicplants
 import android.app.Application
 import android.graphics.BitmapFactory
 import androidx.lifecycle.AndroidViewModel
-import com.google.firebase.ml.modeldownloader.CustomModelDownloadConditions
-import com.google.firebase.ml.modeldownloader.DownloadType
-import com.google.firebase.ml.modeldownloader.FirebaseModelDownloader
+import com.waracle.vision.toxicplants.camera.rotate
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import java.io.File
 
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
-    private lateinit var plantDetector: PlantDetector
+    private val plantDetector = PlantDetector()
 
-    val message = MutableStateFlow("Waiting")
-
-    init {
-        val conditions = CustomModelDownloadConditions.Builder().build()
-
-        FirebaseModelDownloader.getInstance()
-            .getModel("Toxic-Plants-Detector", DownloadType.LOCAL_MODEL, conditions)
-            .addOnCompleteListener {
-                val model = it.result
-                if (model == null) {
-                    message.value = "Failed to get model file."
-                } else {
-                    message.value = "Downloaded remote model: ${model.name}"
-                    plantDetector = PlantDetector(model)
-
-//                    application.resources.openRawResource(R.raw.plant).let { stream ->
-//                        BitmapFactory.decodeStream(stream)?.let { bitmap ->
-//                            plantDetector.processImage(bitmap)
-//                        }
-//                    }
-                }
-            }
-            .addOnFailureListener {
-                message.value = "Failure: ${it.message}"
-            }
+    val message = MutableStateFlow("Waiting").apply {
+        combine(plantDetector.message) { it1, it2 -> it1 + it2 }
     }
 
     fun analiseImage(file: File) {
         BitmapFactory.decodeFile(file.absolutePath).let { bitmap ->
-            plantDetector.processImage(bitmap).let {
+            plantDetector.processImage(bitmap.rotate()).let {
                 message.value = it
             }
         }

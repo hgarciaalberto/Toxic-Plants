@@ -3,10 +3,12 @@ package com.waracle.vision.toxicplants.camera.video
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
 import androidx.camera.core.*
+import androidx.camera.core.impl.utils.executor.CameraXExecutors
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
 import androidx.camera.video.VideoCapture
@@ -15,11 +17,14 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.concurrent.futures.await
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.*
 import com.google.common.util.concurrent.ListenableFuture
+import com.waracle.vision.toxicplants.camera.rotate
+import com.waracle.vision.toxicplants.camera.toBitmap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 
 class VideoCaptureManager private constructor(private val builder: Builder) :
@@ -83,33 +88,61 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
      * Bind the selected camera and any use cases to the lifecycle.
      * Connect the Preview to the PreviewView.
      */
+    @SuppressLint("RestrictedApi")
     fun showPreview(previewState: PreviewState, cameraPreview: PreviewView = getCameraPreview()): View {
-        getLifeCycleOwner().lifecycleScope.launchWhenResumed {
-            val cameraProvider = cameraProviderFuture.await()
-            cameraProvider.unbindAll()
+        getLifeCycleOwner().lifecycleScope.launch {
+            // repeatOnLifecycle will restart the coroutine when the lifecycle is resumed
+            getLifecycle().repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                val cameraProvider = cameraProviderFuture.await()
+                cameraProvider.unbindAll()
 
-            //Select a camera lens
-            val cameraSelector: CameraSelector = CameraSelector.Builder()
-                .requireLensFacing(previewState.cameraLens)
-                .build()
+                //Select a camera lens
+                val cameraSelector: CameraSelector = CameraSelector.Builder()
+                    .requireLensFacing(previewState.cameraLens)
+                    .build()
 
-            //Create Preview use case
-            val preview: Preview = Preview.Builder()
-                .setTargetResolution(previewState.size)
-                .build()
-                .apply { setSurfaceProvider(cameraPreview.surfaceProvider) }
+                //Create Preview use case
+                val preview: Preview = Preview.Builder()
+                    .setTargetResolution(previewState.size)
+                    .build()
+                    .apply {
+                        setSurfaceProvider(cameraPreview.surfaceProvider)
+                    }
 
-            //Create Video Capture use case
-            val recorder = Recorder.Builder().build()
-            videoCapture = VideoCapture.withOutput(recorder)
+                //Create Video Capture use case
+//                    val recorder = Recorder.Builder().build()
+//                    videoCapture = VideoCapture.withOutput(recorder)
 
-            cameraProvider.bindToLifecycle(
-                getLifeCycleOwner(),
-                cameraSelector,
-                preview,
-                videoCapture
-            ).apply {
-                cameraControl.enableTorch(previewState.torchState == TorchState.ON)
+                //Create an Analyzer use case
+                val imageAnalyzer = ImageAnalysis.Builder()
+                    .apply {
+                        setTargetResolution(previewState.size)
+                        setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        build()
+                    }
+                    .run {
+                        build()
+                    }
+                    .apply {
+                        setAnalyzer(CameraXExecutors.ioExecutor()) { imageProxy ->
+
+                            CoroutineScope(Dispatchers.IO).launch {
+                                delay(700)
+                                listener?.processFrame(imageProxy.toBitmap()?.rotate())
+                                imageProxy.close()
+                            }
+                        }
+                    }
+
+                cameraProvider.bindToLifecycle(
+                    getLifeCycleOwner(),
+                    cameraSelector,
+                    preview,
+//                        videoCapture,
+                    imageAnalyzer
+                ).apply {
+                    cameraControl.enableTorch(previewState.torchState == TorchState.ON)
+                }
             }
         }
         return cameraPreview
@@ -179,6 +212,7 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
         fun recordingPaused()
         fun recordingCompleted(outputUri: Uri)
         fun onError(throwable: Throwable?)
+        fun processFrame(bitmap: Bitmap?)
     }
 
     class Builder(val context: Context) {
