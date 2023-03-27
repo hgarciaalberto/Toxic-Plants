@@ -1,11 +1,13 @@
 package com.waracle.vision.toxicplants
 
 import android.app.Application
+import android.graphics.BitmapFactory
 import androidx.lifecycle.AndroidViewModel
 import com.google.firebase.ml.modeldownloader.CustomModelDownloadConditions
 import com.google.firebase.ml.modeldownloader.DownloadType
 import com.google.firebase.ml.modeldownloader.FirebaseModelDownloader
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.io.File
 
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -37,6 +39,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .addOnFailureListener {
                 message.value = "Failure: ${it.message}"
             }
+    }
+
+    fun analiseImage(file: File) {
+        BitmapFactory.decodeFile(file.absolutePath).let { bitmap ->
+            plantDetector.processImage(bitmap).let {
+                message.value = it
+            }
+        }
     }
 
     companion object {

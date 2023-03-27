@@ -54,8 +54,9 @@ fun ToxicPlantScreen(
                     Text(message)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
-                CameraCapture(modifier) {
-                    Toast.makeText(context, "${it.absoluteFile}", Toast.LENGTH_SHORT).show()
+                CameraCapture(modifier) { file ->
+                    Toast.makeText(context, "${file.absoluteFile}", Toast.LENGTH_SHORT).show()
+                    viewModel.analiseImage(file)
                 }
             }
         }

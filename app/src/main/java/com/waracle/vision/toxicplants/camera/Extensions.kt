@@ -32,22 +32,18 @@ suspend fun ImageCapture.takePicture(executor: Executor): File {
 
     return suspendCoroutine { continuation ->
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
-        takePicture(
-            outputOptions, executor,
-            object : ImageCapture.OnImageSavedCallback {
-                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    continuation.resume(photoFile)
-                }
-
-                override fun onError(ex: ImageCaptureException) {
-                    Log.e("TakePicture", "Image capture failed", ex)
-                    continuation.resumeWithException(ex)
-                }
+        takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
+            override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                continuation.resume(photoFile)
             }
-        )
+
+            override fun onError(ex: ImageCaptureException) {
+                Log.e("TakePicture", "Image capture failed", ex)
+                continuation.resumeWithException(ex)
+            }
+        })
     }
 }
-
 
 suspend fun Context.getCameraProvider(): ProcessCameraProvider = suspendCoroutine { continuation ->
     ProcessCameraProvider.getInstance(this).also { future ->
@@ -59,4 +55,3 @@ suspend fun Context.getCameraProvider(): ProcessCameraProvider = suspendCoroutin
         )
     }
 }
-
