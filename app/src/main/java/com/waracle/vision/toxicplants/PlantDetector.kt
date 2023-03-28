@@ -12,9 +12,14 @@ import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
+import org.tensorflow.lite.support.metadata.MetadataExtractor
+import org.tensorflow.lite.support.metadata.schema.AssociatedFileType
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStreamReader
 import java.nio.ByteBuffer
-
 
 class PlantDetector {
 
@@ -23,7 +28,8 @@ class PlantDetector {
     private var inputImageWidth: Int = 0
     private var inputImageHeight: Int = 0
 
-    lateinit var probabilityBuffer: TensorBuffer
+    private lateinit var probabilityBuffer: TensorBuffer
+    private lateinit var predictionLabels: List<String>
 
     val message = MutableStateFlow("Waiting")
 
@@ -61,13 +67,18 @@ class PlantDetector {
                 model.file?.let { modelFile ->
                     interpreter = Interpreter(modelFile, options)
 
+                    predictionLabels = getLabels(MetadataExtractor(loadModelByteBuffer(modelFile)))
+
                     interpreter.getInputTensor(0).let { inputTensor ->
                         inputImageWidth = inputTensor.shape()[1]
                         inputImageHeight = inputTensor.shape()[2]
                     }
 
                     interpreter.getOutputTensor(0).let { outputTensor ->
-                        probabilityBuffer = TensorBuffer.createFixedSize(outputTensor.shape(), outputTensor.dataType())
+                        probabilityBuffer = TensorBuffer.createFixedSize(
+                            outputTensor.shape(),
+                            outputTensor.dataType()
+                        )
                     }
                 }
             }
@@ -76,6 +87,32 @@ class PlantDetector {
                 Log.e(TAG, "Unexpected model type downloaded.")
             }
         }
+    }
+
+    private fun loadModelByteBuffer(modelFile: File): ByteBuffer {
+        FileInputStream(modelFile).use { fileInputStream ->
+            val byteArray = ByteArray(modelFile.length().toInt())
+            fileInputStream.read(byteArray)
+            return ByteBuffer.wrap(byteArray)
+        }
+    }
+
+    private fun getLabels(metadataExtractor: MetadataExtractor): List<String> {
+        val tensorMetadata = metadataExtractor.getOutputTensorMetadata(0)
+        val associatedFilesLength = tensorMetadata?.associatedFilesLength() ?: 0
+
+        val labelsFile = (0 until associatedFilesLength)
+            .map { tensorMetadata?.associatedFiles(it) }
+            .firstOrNull { it?.type() == AssociatedFileType.TENSOR_AXIS_LABELS && it.locale() != null }
+
+        val labels = mutableListOf<String>()
+        labelsFile?.let { file ->
+            metadataExtractor.getAssociatedFile(file.name()).use { inputStream ->
+                val reader = BufferedReader(InputStreamReader(inputStream))
+                reader.forEachLine { line -> labels.add(line) }
+            }
+        }
+        return labels
     }
 
     fun processImage(bitmap: Bitmap): String {
@@ -120,10 +157,12 @@ class PlantDetector {
 
     private fun getOutputString(output: FloatArray): String {
         val maxIndex = output.indices.maxByOrNull { output[it] } ?: -1
+        val label = predictionLabels[maxIndex]
+        val percent = output[maxIndex] / 255 * 100
         return """
-          Prediction Result: %d
+          Prediction Result: %s
           Confidence: %.2f%%
-        """.trimIndent().format(maxIndex, output[maxIndex] / 255 * 100)
+        """.trimIndent().format(label, percent)
     }
 
     companion object {
