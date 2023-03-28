@@ -21,7 +21,6 @@ import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.nio.ByteBuffer
 
-
 class PlantDetector {
 
     private lateinit var interpreter: Interpreter
@@ -29,10 +28,8 @@ class PlantDetector {
     private var inputImageWidth: Int = 0
     private var inputImageHeight: Int = 0
 
-    lateinit var probabilityBuffer: TensorBuffer
-
+    private lateinit var probabilityBuffer: TensorBuffer
     private lateinit var predictionLabels: List<String>
-
 
     val message = MutableStateFlow("Waiting")
 
@@ -69,15 +66,19 @@ class PlantDetector {
             is CustomModel -> {
                 model.file?.let { modelFile ->
                     interpreter = Interpreter(modelFile, options)
-                    val metadataExtractor = MetadataExtractor(loadModelByteBuffer(modelFile))
-                    predictionLabels = getLabels(metadataExtractor)
+
+                    predictionLabels = getLabels(MetadataExtractor(loadModelByteBuffer(modelFile)))
+
                     interpreter.getInputTensor(0).let { inputTensor ->
                         inputImageWidth = inputTensor.shape()[1]
                         inputImageHeight = inputTensor.shape()[2]
                     }
 
                     interpreter.getOutputTensor(0).let { outputTensor ->
-                        probabilityBuffer = TensorBuffer.createFixedSize(outputTensor.shape(), outputTensor.dataType())
+                        probabilityBuffer = TensorBuffer.createFixedSize(
+                            outputTensor.shape(),
+                            outputTensor.dataType()
+                        )
                     }
                 }
             }
