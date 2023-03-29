@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants.camera
+package com.waracle.vision.toxicplants.camera.capture
 
 import android.util.Log
 import androidx.camera.core.CameraSelector
@@ -17,6 +17,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.waracle.vision.toxicplants.camera.executor
+import com.waracle.vision.toxicplants.camera.getCameraProvider
+import com.waracle.vision.toxicplants.camera.takePicture
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import java.io.File

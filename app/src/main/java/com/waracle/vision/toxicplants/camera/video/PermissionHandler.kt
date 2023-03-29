@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalPermissionsApi::class)
-
 package com.waracle.vision.toxicplants.camera.video
 
 import android.content.Intent
@@ -32,9 +30,10 @@ import com.waracle.vision.toxicplants.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
 @OptIn(ExperimentalPermissionsApi::class)
-class PermissionsHandler {
+class PermissionsHandler @Inject constructor() {
 
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state
@@ -119,6 +118,7 @@ class PermissionsHandler {
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HandlePermissionsRequest(permissions: List<String>, permissionsHandler: PermissionsHandler) {
 
@@ -150,6 +150,7 @@ fun HandlePermissionsRequest(permissions: List<String>, permissionsHandler: Perm
     )
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HandlePermissionAction(
     action: PermissionsHandler.Action,
