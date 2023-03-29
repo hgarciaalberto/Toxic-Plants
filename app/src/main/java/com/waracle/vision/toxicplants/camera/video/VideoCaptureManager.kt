@@ -3,7 +3,6 @@ package com.waracle.vision.toxicplants.camera.video
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
@@ -19,21 +18,19 @@ import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
 import androidx.lifecycle.*
 import com.google.common.util.concurrent.ListenableFuture
-import com.waracle.vision.toxicplants.camera.rotate
-import com.waracle.vision.toxicplants.camera.toBitmap
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.File
 
 class VideoCaptureManager private constructor(private val builder: Builder) :
-    LifecycleEventObserver {
+    LifecycleEventObserver, ImageAnalysis.Analyzer {
 
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var videoCapture: VideoCapture<Recorder>
 
     private lateinit var activeRecording: Recording
+
+    private val scope = CoroutineScope(Dispatchers.IO)
+    private var recordingJob: Job? = null
 
     var listener: Listener? = null
 
@@ -89,7 +86,10 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
      * Connect the Preview to the PreviewView.
      */
     @SuppressLint("RestrictedApi")
-    fun showPreview(previewState: PreviewState, cameraPreview: PreviewView = getCameraPreview()): View {
+    fun showPreview(
+        previewState: PreviewState,
+        cameraPreview: PreviewView = getCameraPreview()
+    ): View {
         getLifeCycleOwner().lifecycleScope.launch {
             // repeatOnLifecycle will restart the coroutine when the lifecycle is resumed
             getLifecycle().repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -124,21 +124,14 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
                         build()
                     }
                     .apply {
-                        setAnalyzer(CameraXExecutors.ioExecutor()) { imageProxy ->
-
-                            CoroutineScope(Dispatchers.IO).launch {
-                                delay(700)
-                                listener?.processFrame(imageProxy.toBitmap()?.rotate())
-                                imageProxy.close()
-                            }
-                        }
+                        setAnalyzer(CameraXExecutors.ioExecutor(), this@VideoCaptureManager)
                     }
 
                 cameraProvider.bindToLifecycle(
                     getLifeCycleOwner(),
                     cameraSelector,
                     preview,
-//                        videoCapture,
+//                  videoCapture,
                     imageAnalyzer
                 ).apply {
                     cameraControl.enableTorch(previewState.torchState == TorchState.ON)
@@ -148,6 +141,12 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
         return cameraPreview
     }
 
+    @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
+    override fun analyze(imageProxy: ImageProxy) {
+        listener?.process(imageProxy)
+    }
+
+    @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
     fun updatePreview(previewState: PreviewState, previewView: View) {
         showPreview(previewState, previewView as PreviewView)
     }
@@ -212,7 +211,7 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
         fun recordingPaused()
         fun recordingCompleted(outputUri: Uri)
         fun onError(throwable: Throwable?)
-        fun processFrame(bitmap: Bitmap?)
+        fun process(imageProxy: ImageProxy)
     }
 
     class Builder(val context: Context) {

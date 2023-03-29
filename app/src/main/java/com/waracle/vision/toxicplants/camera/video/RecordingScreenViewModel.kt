@@ -2,21 +2,24 @@
 
 package com.waracle.vision.toxicplants.camera.video
 
-import android.graphics.Bitmap
+import android.graphics.Rect
 import android.net.Uri
 import android.util.Log
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.TorchState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
-import com.waracle.vision.toxicplants.objectdetector.PlantDetectorOld
+import com.google.android.gms.tasks.Task
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.objects.DetectedObject
 import com.waracle.vision.toxicplants.R
-import com.waracle.vision.toxicplants.camera.rotate
+import com.waracle.vision.toxicplants.objectdetector.Detector
 import com.waracle.vision.toxicplants.objectdetector.InfoMessage.Companion.toInfoMessage
 import com.waracle.vision.toxicplants.objectdetector.Message
 import com.waracle.vision.toxicplants.objectdetector.ObjectDetectorProcessor
@@ -37,6 +40,8 @@ class RecordingViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state
+
+    val boundingBoxes = MutableStateFlow<List<ObjectDetectorProcessor.NormalizedRect>>(listOf())
 
     private val _effect = MutableSharedFlow<Effect>()
     val effect: SharedFlow<Effect> = _effect
@@ -182,10 +187,14 @@ class RecordingViewModel @Inject constructor(
         }
     }
 
-    fun analiseImage(bitmap: Bitmap) {
+    @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
+    fun analiseImage(imageProxy: ImageProxy) {
         viewModelScope.launch {
-            plantDetector.processImage(bitmap.rotate()).let {
+            plantDetector.processImage(imageProxy).let {
                 message.value = it
+                if(it is Detector.DetectionResult.SUCCESS && it.bounds != null) {
+                    boundingBoxes.value = listOf(it.bounds)
+                }
             }
         }
     }
