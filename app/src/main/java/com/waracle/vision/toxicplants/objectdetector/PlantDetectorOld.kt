@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants
+package com.waracle.vision.toxicplants.objectdetector
 
 import android.graphics.Bitmap
 import android.util.Log
@@ -6,6 +6,7 @@ import com.google.firebase.ml.modeldownloader.CustomModel
 import com.google.firebase.ml.modeldownloader.CustomModelDownloadConditions
 import com.google.firebase.ml.modeldownloader.DownloadType
 import com.google.firebase.ml.modeldownloader.FirebaseModelDownloader
+import com.waracle.vision.toxicplants.objectdetector.InfoMessage.Companion.toInfoMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
@@ -22,7 +23,7 @@ import java.io.InputStreamReader
 import java.nio.ByteBuffer
 import javax.inject.Inject
 
-class PlantDetector @Inject constructor() {
+class PlantDetectorOld @Inject constructor() : Detector{
 
     private lateinit var interpreter: Interpreter
 
@@ -32,7 +33,7 @@ class PlantDetector @Inject constructor() {
     private lateinit var probabilityBuffer: TensorBuffer
     private lateinit var predictionLabels: List<String>
 
-    val message = MutableStateFlow("Waiting")
+    val message = MutableStateFlow<Message>(InfoMessage("Waiting"))
 
     init {
         val conditions = CustomModelDownloadConditions.Builder().build()
@@ -42,14 +43,14 @@ class PlantDetector @Inject constructor() {
             .addOnCompleteListener {
                 val model = it.result
                 if (model == null) {
-                    message.value = "Failed to get model file."
+                    message.value = "Failed to get model file.".toInfoMessage()
                 } else {
-                    message.value = "Downloaded remote model: ${model.name}"
+                    message.value = "Downloaded remote model: ${model.name}".toInfoMessage()
                     initInterpreter(model)
                 }
             }
             .addOnFailureListener {
-                message.value = "Failure: ${it.message}"
+                message.value = "Failure: ${it.message}".toInfoMessage()
             }
     }
 
@@ -116,9 +117,10 @@ class PlantDetector @Inject constructor() {
         return labels
     }
 
-    fun processImage(bitmap: Bitmap): String {
+
+    override suspend fun processImage(bitmap: Bitmap): Detector.DetectionResult {
         if (!this::interpreter.isInitialized) {
-            return "TF Lite Interpreter is not initialized yet."
+            return Detector.DetectionResult.ERROR("TF Lite Interpreter is not initialized yet.")
         } else {
 
             val inputShape = interpreter.getInputTensor(0).shape()
@@ -152,8 +154,20 @@ class PlantDetector @Inject constructor() {
             val elapsedTime = (System.nanoTime() - startTime) / 1000000
             Log.d(TAG, "Inference time = " + elapsedTime + "ms")
 
-            return getOutputString(probabilityBuffer.floatArray)
+            return getDetectionSuccessResult(probabilityBuffer.floatArray)
         }
+    }
+
+    private fun getDetectionSuccessResult(output: FloatArray) : Detector.DetectionResult.SUCCESS {
+        val maxIndex = output.indices.maxByOrNull { output[it] } ?: -1
+        val label = predictionLabels[maxIndex]
+        val percent = output[maxIndex] / 255 * 100
+
+        return Detector.DetectionResult.SUCCESS(
+            label = label,
+            confidence = percent,
+            bounds = null
+        )
     }
 
     private fun getOutputString(output: FloatArray): String {
@@ -167,6 +181,6 @@ class PlantDetector @Inject constructor() {
     }
 
     companion object {
-        private var TAG = PlantDetector::class.java.name
+        private var TAG = PlantDetectorOld::class.java.name
     }
 }

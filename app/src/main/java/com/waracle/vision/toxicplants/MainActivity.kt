@@ -20,6 +20,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.camera.capture.CameraCapture
+import com.waracle.vision.toxicplants.objectdetector.Detector
+import com.waracle.vision.toxicplants.objectdetector.InfoMessage
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,15 +48,31 @@ fun ToxicPlantScreen(
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val message by viewModel.message.collectAsStateWithLifecycle()
+    val messages by viewModel.message.collectAsStateWithLifecycle()
 
     PermissionScreen(modifier = modifier) { result ->
 
         if (result) {
             Column(modifier) {
-                if (message.isNotBlank()) {
-                    Text(message)
-                    Spacer(modifier = Modifier.height(8.dp))
+                if (messages.isNotEmpty()) {
+                    for(message in messages) {
+                        when(message) {
+                            is InfoMessage -> {
+                                Text(message.info)
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                            is Detector.DetectionResult.SUCCESS -> {
+                                Text(message.label)
+                                Text(message.confidence.toString())
+                                //todo draw bounds
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                            is Detector.DetectionResult.ERROR -> {
+                                Text(message.reason)
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                    }
                 }
                 CameraCapture(modifier) { file ->
                     Toast.makeText(context, "${file.absoluteFile}", Toast.LENGTH_SHORT).show()

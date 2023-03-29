@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
+import com.waracle.vision.toxicplants.objectdetector.Message
 import java.util.*
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -106,7 +107,7 @@ internal fun RecordingScreen(
 
 @Composable
 private fun VideoScreenContent(
-    message: String,
+    message: Message,
     allPermissionsGranted: Boolean,
     cameraLens: Int?,
     @TorchState.State torchState: Int,
@@ -147,7 +148,7 @@ private fun VideoScreenContent(
                         .background(Color.White)
                         .fillMaxWidth()
                         .padding(10.dp, 10.dp, 10.dp, 15.dp),
-                    text = message,
+                    text = message.toString(),
                     textAlign = TextAlign.Center,
                     fontSize = 16.sp
                 )

@@ -14,9 +14,12 @@ import androidx.lifecycle.viewModelScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
-import com.waracle.vision.toxicplants.PlantDetector
+import com.waracle.vision.toxicplants.objectdetector.PlantDetectorOld
 import com.waracle.vision.toxicplants.R
 import com.waracle.vision.toxicplants.camera.rotate
+import com.waracle.vision.toxicplants.objectdetector.InfoMessage.Companion.toInfoMessage
+import com.waracle.vision.toxicplants.objectdetector.Message
+import com.waracle.vision.toxicplants.objectdetector.ObjectDetectorProcessor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -30,7 +33,7 @@ class RecordingViewModel @Inject constructor(
     val permissionsHandler: PermissionsHandler
 ) : ViewModel() {
 
-    private val plantDetector by lazy { PlantDetector() }
+    private val plantDetector by lazy { ObjectDetectorProcessor() }
 
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state
@@ -38,7 +41,7 @@ class RecordingViewModel @Inject constructor(
     private val _effect = MutableSharedFlow<Effect>()
     val effect: SharedFlow<Effect> = _effect
 
-    val message = MutableStateFlow("Waiting")
+    val message = MutableStateFlow<Message>("Waiting".toInfoMessage())
 
     init {
         permissionsHandler
@@ -180,8 +183,10 @@ class RecordingViewModel @Inject constructor(
     }
 
     fun analiseImage(bitmap: Bitmap) {
-        plantDetector.processImage(bitmap.rotate()).let {
-            message.value = it
+        viewModelScope.launch {
+            plantDetector.processImage(bitmap.rotate()).let {
+                message.value = it
+            }
         }
     }
 
