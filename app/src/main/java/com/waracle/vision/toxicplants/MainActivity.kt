@@ -16,13 +16,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.waracle.vision.toxicplants.camera.CameraCapture
+import com.waracle.vision.toxicplants.camera.capture.CameraCapture
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +43,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ToxicPlantScreen(
     modifier: Modifier = Modifier,
-    viewModel: MainViewModel = viewModel()
+    viewModel: MainViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val message by viewModel.message.collectAsStateWithLifecycle()

@@ -20,8 +20,9 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.nio.ByteBuffer
+import javax.inject.Inject
 
-class PlantDetector {
+class PlantDetector @Inject constructor() {
 
     private lateinit var interpreter: Interpreter
 

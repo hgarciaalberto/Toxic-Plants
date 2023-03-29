@@ -7,8 +7,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
-class FileManager(private val context: Context) {
+class FileManager @Inject constructor(private val context: Context) {
 
     private fun getPrivateFileDirectory(dir: String): File? {
         val directory = File(context.filesDir, dir)

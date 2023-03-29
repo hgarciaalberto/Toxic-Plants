@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalPermissionsApi::class)
-
 package com.waracle.vision.toxicplants.camera.video
 
 import android.Manifest
@@ -21,9 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.ViewModelProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
 import java.util.*
@@ -31,8 +28,7 @@ import java.util.*
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 internal fun RecordingScreen(
-    factory: ViewModelProvider.Factory,
-    recordingViewModel: RecordingViewModel = viewModel(factory = factory),
+    recordingViewModel: RecordingViewModel = hiltViewModel(),
     onShowMessage: (message: Int) -> Unit
 ) {
     val context = LocalContext.current

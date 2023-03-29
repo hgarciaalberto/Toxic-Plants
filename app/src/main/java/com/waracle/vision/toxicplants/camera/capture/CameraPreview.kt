@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants.camera
+package com.waracle.vision.toxicplants.camera.capture
 
 import android.view.ViewGroup
 import androidx.camera.core.Preview

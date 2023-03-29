@@ -17,12 +17,15 @@ import com.google.accompanist.permissions.PermissionState
 import com.waracle.vision.toxicplants.PlantDetector
 import com.waracle.vision.toxicplants.R
 import com.waracle.vision.toxicplants.camera.rotate
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private const val TAG = "RecordingViewModel"
 
-class RecordingViewModel constructor(
+@HiltViewModel
+class RecordingViewModel @Inject constructor(
     private val fileManager: FileManager,
     val permissionsHandler: PermissionsHandler
 ) : ViewModel() {
