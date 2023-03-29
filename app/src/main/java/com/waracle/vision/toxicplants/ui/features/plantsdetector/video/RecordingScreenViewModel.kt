@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalPermissionsApi::class)
 
-package com.waracle.vision.toxicplants.camera.video
+package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.graphics.Bitmap
 import android.net.Uri
@@ -14,9 +14,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
-import com.waracle.vision.toxicplants.PlantDetector
 import com.waracle.vision.toxicplants.R
 import com.waracle.vision.toxicplants.camera.rotate
+import com.waracle.vision.toxicplants.plantdetector.PlantDetector
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -27,10 +27,9 @@ private const val TAG = "RecordingViewModel"
 @HiltViewModel
 class RecordingViewModel @Inject constructor(
     private val fileManager: FileManager,
-    val permissionsHandler: PermissionsHandler
+    val permissionsHandler: PermissionsHandler,
+    val plantDetector: PlantDetector
 ) : ViewModel() {
-
-    private val plantDetector by lazy { PlantDetector() }
 
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state
@@ -38,7 +37,11 @@ class RecordingViewModel @Inject constructor(
     private val _effect = MutableSharedFlow<Effect>()
     val effect: SharedFlow<Effect> = _effect
 
-    val message = MutableStateFlow("Waiting")
+    val message = MutableStateFlow("Waiting").also {
+        it.combine(plantDetector.message) { m1, m2 ->
+            m1 + m2
+        }
+    }
 
     init {
         permissionsHandler
@@ -180,9 +183,7 @@ class RecordingViewModel @Inject constructor(
     }
 
     fun analiseImage(bitmap: Bitmap) {
-        plantDetector.processImage(bitmap.rotate()).let {
-            message.value = it
-        }
+        plantDetector.processImage(bitmap.rotate())
     }
 
     data class State(
@@ -220,7 +221,6 @@ class RecordingViewModel @Inject constructor(
     }
 
     sealed class Effect {
-
         data class ShowMessage(val message: Int = R.string.something_went_wrong) : Effect()
         data class RecordVideo(val filePath: String) : Effect()
 //        data class NavigateTo(val route: String) : Effect()

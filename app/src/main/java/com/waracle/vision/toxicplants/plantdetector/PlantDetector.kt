@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants
+package com.waracle.vision.toxicplants.plantdetector
 
 import android.graphics.Bitmap
 import android.util.Log
@@ -116,9 +116,9 @@ class PlantDetector @Inject constructor() {
         return labels
     }
 
-    fun processImage(bitmap: Bitmap): String {
+    fun processImage(bitmap: Bitmap) {
         if (!this::interpreter.isInitialized) {
-            return "TF Lite Interpreter is not initialized yet."
+            message.value = "TF Lite Interpreter is not initialized yet."
         } else {
 
             val inputShape = interpreter.getInputTensor(0).shape()
@@ -152,7 +152,7 @@ class PlantDetector @Inject constructor() {
             val elapsedTime = (System.nanoTime() - startTime) / 1000000
             Log.d(TAG, "Inference time = " + elapsedTime + "ms")
 
-            return getOutputString(probabilityBuffer.floatArray)
+            message.value = getOutputString(probabilityBuffer.floatArray)
         }
     }
 

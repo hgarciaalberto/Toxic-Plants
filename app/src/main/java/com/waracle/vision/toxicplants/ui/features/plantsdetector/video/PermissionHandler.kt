@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants.camera.video
+package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.content.Intent
 import android.net.Uri

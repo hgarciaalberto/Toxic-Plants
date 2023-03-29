@@ -1,8 +1,8 @@
 package com.waracle.vision.toxicplants.di
 
 import android.content.Context
-import com.waracle.vision.toxicplants.camera.video.FileManager
-import com.waracle.vision.toxicplants.camera.video.PermissionsHandler
+import com.waracle.vision.toxicplants.ui.features.plantsdetector.video.FileManager
+import com.waracle.vision.toxicplants.ui.features.plantsdetector.video.PermissionsHandler
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

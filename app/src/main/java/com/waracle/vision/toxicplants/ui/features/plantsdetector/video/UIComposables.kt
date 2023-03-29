@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants.camera.video
+package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.text.format.DateUtils
 import androidx.camera.core.ImageCapture

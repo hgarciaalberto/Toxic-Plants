@@ -1,8 +1,9 @@
-package com.waracle.vision.toxicplants.camera.video
+package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.Manifest
 import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import android.util.Size
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.TorchState
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
 import java.util.*
@@ -28,8 +30,8 @@ import java.util.*
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 internal fun RecordingScreen(
+    navigation: NavController,
     recordingViewModel: RecordingViewModel = hiltViewModel(),
-    onShowMessage: (message: Int) -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -61,7 +63,6 @@ internal fun RecordingScreen(
 
             override fun processFrame(bitmap: Bitmap?) {
                 bitmap?.let { recordingViewModel.analiseImage(it) }
-
             }
         }
     }
@@ -94,7 +95,9 @@ internal fun RecordingScreen(
         recordingViewModel.effect.collect {
             when (it) {
 //                is RecordingViewModel.Effect.NavigateTo -> navController.navigateTo(it.route)
-                is RecordingViewModel.Effect.ShowMessage -> onShowMessage(it.message)
+                is RecordingViewModel.Effect.ShowMessage -> {
+                    Log.i("RecordingScreen", "message: ${it.message}")
+                }
                 is RecordingViewModel.Effect.RecordVideo -> captureManager.startRecording(it.filePath)
                 RecordingViewModel.Effect.PauseRecording -> captureManager.pauseRecording()
                 RecordingViewModel.Effect.ResumeRecording -> captureManager.resumeRecording()
