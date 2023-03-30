@@ -29,9 +29,6 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
 
     private lateinit var activeRecording: Recording
 
-    private val scope = CoroutineScope(Dispatchers.IO)
-    private var recordingJob: Job? = null
-
     var listener: Listener? = null
 
     init {

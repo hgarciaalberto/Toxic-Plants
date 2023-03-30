@@ -41,7 +41,6 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
     override suspend fun processImage(imageProxy: ImageProxy): Detector.DetectionResult = suspendCoroutine { continuation ->
         Log.d(TAG, "Image resolution: ${imageProxy.width} x ${imageProxy.height}")
         val image: Image? = imageProxy.image
-
         image?.let {img->
             val iImage = InputImage
                 .fromMediaImage(img,imageProxy.imageInfo.rotationDegrees)
@@ -50,6 +49,13 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                     Log.d(TAG, "Found objects processImage: ${detectedObjects.size}")
                     detectedObjects.firstOrNull()?.let { detectedObject ->
                         val boundingBox: Rect = detectedObject.boundingBox
+                        val clippedBox = Rect(
+                            maxOf(0, boundingBox.left),
+                            maxOf(0, boundingBox.top),
+                            minOf(imageProxy.width, boundingBox.right),
+                            minOf(imageProxy.height, boundingBox.bottom)
+                        )
+
                         val trackingId = detectedObject.trackingId
                         for (label in detectedObject.labels) {
                             val text = label.text
@@ -59,7 +65,7 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                             val result = Detector.DetectionResult.SUCCESS(
                                 label = text,
                                 confidence = confidence,
-                                bounds = boundingBox.toNormalizedRect(iImage.width, iImage.height)
+                                bounds = clippedBox
                             )
                             continuation.resume(result)
                         }
@@ -71,18 +77,6 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                     imageProxy.close() }
         }
     }
-
-    data class NormalizedRect(val left: Float, val top: Float, val right: Float, val bottom: Float)
-
-    private fun Rect.toNormalizedRect(imageWidth: Int, imageHeight: Int): NormalizedRect {
-        return NormalizedRect(
-            left = left.toFloat() / imageWidth,
-            top = top.toFloat() / imageHeight,
-            right = right.toFloat() / imageWidth,
-            bottom = bottom.toFloat() / imageHeight
-        )
-    }
-
 
     companion object {
         val TAG = this::class.java.toString()

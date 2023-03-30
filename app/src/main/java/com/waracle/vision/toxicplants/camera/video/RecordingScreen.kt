@@ -1,11 +1,9 @@
 package com.waracle.vision.toxicplants.camera.video
 
 import android.Manifest
-import android.graphics.Bitmap
+import android.content.res.Resources
 import android.graphics.Rect
 import android.net.Uri
-import android.util.Log
-import android.util.Size
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.TorchState
@@ -15,24 +13,24 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.android.gms.tasks.Task
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.objects.DetectedObject
 import com.waracle.vision.toxicplants.R
 import com.waracle.vision.toxicplants.camera.boxes.BoundingBoxOverlay
 import com.waracle.vision.toxicplants.objectdetector.Message
-import com.waracle.vision.toxicplants.objectdetector.ObjectDetectorProcessor
 import java.util.*
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -47,6 +45,7 @@ internal fun RecordingScreen(
     val state by recordingViewModel.state.collectAsState()
     val message by recordingViewModel.message.collectAsStateWithLifecycle()
     val boundingBoxes by recordingViewModel.boundingBoxes.collectAsStateWithLifecycle()
+    var imageProxySize by remember { mutableStateOf(Size(0f, 0f)) }
 
     val listener = remember(recordingViewModel) {
         object : VideoCaptureManager.Listener {
@@ -71,6 +70,7 @@ internal fun RecordingScreen(
             }
 
             override fun process(imageProxy: ImageProxy) {
+                imageProxySize = Size(imageProxy.width.toFloat(), imageProxy.height.toFloat())
                 recordingViewModel.analiseImage(imageProxy)
             }
         }
@@ -83,12 +83,17 @@ internal fun RecordingScreen(
             .apply { this.listener = listener }
     }
 
-    val permissions = remember { listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO) }
-    HandlePermissionsRequest(permissions = permissions, permissionsHandler = recordingViewModel.permissionsHandler)
+    val permissions =
+        remember { listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO) }
+    HandlePermissionsRequest(
+        permissions = permissions,
+        permissionsHandler = recordingViewModel.permissionsHandler
+    )
 
     CompositionLocalProvider(LocalVideoCaptureManager provides captureManager) {
         VideoScreenContent(
             message = message,
+            imageProxySize = imageProxySize,
             allPermissionsGranted = state.multiplePermissionsState?.allPermissionsGranted ?: false,
             cameraLens = state.lens,
             torchState = state.torchState,
@@ -118,7 +123,8 @@ internal fun RecordingScreen(
 @Composable
 private fun VideoScreenContent(
     message: Message,
-    boundingBoxes: List<ObjectDetectorProcessor.NormalizedRect>,
+    imageProxySize: Size,
+    boundingBoxes: List<Rect>,
     allPermissionsGranted: Boolean,
     cameraLens: Int?,
     @TorchState.State torchState: Int,
@@ -129,6 +135,7 @@ private fun VideoScreenContent(
     onEvent: (RecordingViewModel.Event) -> Unit
 ) {
 
+    var previewSize by remember { mutableStateOf(Size(0f, 0f)) }
     if (!allPermissionsGranted) {
         RequestPermission(message = R.string.request_permissions) {
             onEvent(RecordingViewModel.Event.PermissionRequired)
@@ -137,7 +144,9 @@ private fun VideoScreenContent(
         Box(modifier = Modifier.fillMaxSize()) {
 
             cameraLens?.let {
-                CameraPreview(lens = it, torchState = torchState)
+                CameraPreview(lens = it, torchState = torchState){ newSize ->
+                    previewSize = newSize
+                }
                 if (recordingStatus == RecordingViewModel.RecordingStatus.Idle) {
                     CaptureHeader(
                         modifier = Modifier.align(Alignment.TopStart),
@@ -147,7 +156,13 @@ private fun VideoScreenContent(
                         onCloseTapped = { onEvent(RecordingViewModel.Event.CloseTapped) }
                     )
                 }
-                BoundingBoxOverlay(boundingBoxes = boundingBoxes, modifier = Modifier.fillMaxSize())
+
+                BoundingBoxOverlay(
+                    boundingBoxes = boundingBoxes,
+                    modifier = Modifier.fillMaxSize(),
+                    imageProxySize = imageProxySize,
+                    previewSize = previewSize
+                )
 
                 if (recordedLength > 0) {
                     Timer(
@@ -170,6 +185,11 @@ private fun VideoScreenContent(
         }
     }
 }
+
+fun Density.toPx(dp: Dp): Float {
+    return dp.value * density
+}
+
 
 @Composable
 internal fun CaptureHeader(
@@ -243,16 +263,20 @@ internal fun RecordFooter(
 }
 
 @Composable
-private fun CameraPreview(lens: Int, @TorchState.State torchState: Int) {
+private fun CameraPreview(lens: Int,
+                          @TorchState.State torchState: Int,
+                          onSizeChanged: (Size) -> Unit) {
     val captureManager = LocalVideoCaptureManager.current
     BoxWithConstraints {
+        val size = Size(this.minWidth.value, this.maxHeight.value)
+        onSizeChanged(size)
         AndroidView(
             factory = {
                 captureManager.showPreview(
                     PreviewState(
                         cameraLens = lens,
                         torchState = torchState,
-                        size = Size(this.minWidth.value.toInt(), this.maxHeight.value.toInt()),
+                        size = android.util.Size(this.minWidth.value.toInt(), this.maxHeight.value.toInt()),
                     )
                 )
             },

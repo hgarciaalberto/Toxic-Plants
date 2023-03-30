@@ -12,7 +12,7 @@ interface Detector {
         class SUCCESS(
             val label: String,
             val confidence: Float,
-            val bounds: ObjectDetectorProcessor.NormalizedRect?
+            val bounds: Rect?
         ) : DetectionResult() {
             override fun toString(): String = "$label \n$confidence\nBounds = ${bounds?.toString()}"
         }

@@ -41,7 +41,7 @@ class RecordingViewModel @Inject constructor(
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state
 
-    val boundingBoxes = MutableStateFlow<List<ObjectDetectorProcessor.NormalizedRect>>(listOf())
+    val boundingBoxes = MutableStateFlow<List<Rect>>(listOf())
 
     private val _effect = MutableSharedFlow<Effect>()
     val effect: SharedFlow<Effect> = _effect
