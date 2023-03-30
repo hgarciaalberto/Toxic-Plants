@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants.camera
+package com.waracle.vision.toxicplants
 
 import android.content.Context
 import android.graphics.*
@@ -16,7 +16,6 @@ import java.util.concurrent.Executor
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-
 
 val Context.executor: Executor
     get() = ContextCompat.getMainExecutor(this)

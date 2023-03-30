@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants.camera.video
+package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.util.Size
 import androidx.camera.core.CameraSelector
@@ -9,5 +9,5 @@ data class PreviewState(
     @ImageCapture.FlashMode val flashMode: Int = ImageCapture.FLASH_MODE_OFF,
     @TorchState.State val torchState: Int = TorchState.OFF,
     val cameraLens: Int = CameraSelector.LENS_FACING_BACK,
-    val size: Size = Size(360, 480)
+    val size: Size = Size(1080, 2340)
 )

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalPermissionsApi::class)
 
-package com.waracle.vision.toxicplants.camera.video
+package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.graphics.Bitmap
 import android.net.Uri
@@ -14,9 +14,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
-import com.waracle.vision.toxicplants.PlantDetector
 import com.waracle.vision.toxicplants.R
-import com.waracle.vision.toxicplants.camera.rotate
+import com.waracle.vision.toxicplants.plantdetector.PlantDetector
+import com.waracle.vision.toxicplants.rotate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -25,12 +25,11 @@ import javax.inject.Inject
 private const val TAG = "RecordingViewModel"
 
 @HiltViewModel
-class RecordingViewModel @Inject constructor(
+class CameraViewModel @Inject constructor(
     private val fileManager: FileManager,
-    val permissionsHandler: PermissionsHandler
+    val permissionsHandler: PermissionsHandler,
+    val plantDetector: PlantDetector
 ) : ViewModel() {
-
-    private val plantDetector by lazy { PlantDetector() }
 
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state
@@ -38,7 +37,8 @@ class RecordingViewModel @Inject constructor(
     private val _effect = MutableSharedFlow<Effect>()
     val effect: SharedFlow<Effect> = _effect
 
-    val message = MutableStateFlow("Waiting")
+    private val _permissionMessage = MutableStateFlow("Waiting")
+    val permissionMessage: StateFlow<String> = _permissionMessage
 
     init {
         permissionsHandler
@@ -46,7 +46,12 @@ class RecordingViewModel @Inject constructor(
             .onEach { handlerState ->
                 _state.update { it.copy(multiplePermissionsState = handlerState.multiplePermissionsState) }
             }
-            .catch { Log.e(TAG, it.message, it) }
+            .catch {
+                viewModelScope.launch {
+                    _permissionMessage.emit(it.message ?: "Permission exception")
+                    Log.e(TAG, it.message, it)
+                }
+            }
             .launchIn(viewModelScope)
     }
 
@@ -57,6 +62,7 @@ class RecordingViewModel @Inject constructor(
             Event.FlipTapped -> onFlipTapped()
 
             Event.RecordTapped -> onRecordTapped()
+            Event.PictureTapped -> onPictureTapped()
             Event.PauseTapped -> onPauseTapped()
             Event.ResumeTapped -> onResumeTapped()
             Event.StopTapped -> onStopTapped()
@@ -81,8 +87,8 @@ class RecordingViewModel @Inject constructor(
         }
     }
 
-    private fun onCloseTapped() {
-        Log.w(TAG, "onCloseTapped - NOOP")
+    private fun onCloseTapped() = viewModelScope.launch {
+        _effect.emit(Effect.NavigateBack)
     }
 
     private fun onFlipTapped() {
@@ -106,35 +112,35 @@ class RecordingViewModel @Inject constructor(
         permissionsHandler.onEvent(PermissionsHandler.Event.PermissionRequired)
     }
 
-    private fun onPauseTapped() {
-        viewModelScope.launch {
-            _effect.emit(Effect.PauseRecording)
+    private fun onPauseTapped() = viewModelScope.launch {
+        _effect.emit(Effect.PauseRecording)
+    }
+
+
+    private fun onResumeTapped() = viewModelScope.launch {
+        _effect.emit(Effect.ResumeRecording)
+    }
+
+
+    private fun onStopTapped() = viewModelScope.launch {
+        _effect.emit(Effect.StopRecording)
+    }
+
+
+    private fun onRecordTapped() = viewModelScope.launch {
+        try {
+            val filePath = fileManager.createFile("videos", "mp4")
+            _effect.emit(Effect.RecordVideo(filePath))
+        } catch (exception: IllegalArgumentException) {
+            Log.e(TAG, exception.message, exception)
+            _effect.emit(Effect.ShowMessage())
         }
     }
 
-    private fun onResumeTapped() {
-        viewModelScope.launch {
-            _effect.emit(Effect.ResumeRecording)
-        }
+    private fun onPictureTapped() = viewModelScope.launch {
+        _effect.emit(Effect.SavePicture)
     }
 
-    private fun onStopTapped() {
-        viewModelScope.launch {
-            _effect.emit(Effect.StopRecording)
-        }
-    }
-
-    private fun onRecordTapped() {
-        viewModelScope.launch {
-            try {
-                val filePath = fileManager.createFile("videos", "mp4")
-                _effect.emit(Effect.RecordVideo(filePath))
-            } catch (exception: IllegalArgumentException) {
-                Log.e(TAG, exception.message, exception)
-                _effect.emit(Effect.ShowMessage())
-            }
-        }
-    }
 
     private fun onRecordingFinished(uri: Uri) {
         Log.w(TAG, "onRecordingFinished - NO navigation")
@@ -179,11 +185,10 @@ class RecordingViewModel @Inject constructor(
         }
     }
 
-    fun analiseImage(bitmap: Bitmap) {
-        plantDetector.processImage(bitmap.rotate()).let {
-            message.value = it
-        }
+    fun analiseImage(bitmap: Bitmap) = viewModelScope.launch {
+        _permissionMessage.emit(plantDetector.processImage(bitmap.rotate()))
     }
+
 
     data class State(
         val lens: Int? = null,
@@ -212,18 +217,18 @@ class RecordingViewModel @Inject constructor(
         object FlipTapped : Event()
 
         object RecordTapped : Event()
+        object PictureTapped : Event()
         object PauseTapped : Event()
         object ResumeTapped : Event()
         object StopTapped : Event()
         object PermissionRequired : Event()
-
     }
 
     sealed class Effect {
-
         data class ShowMessage(val message: Int = R.string.something_went_wrong) : Effect()
         data class RecordVideo(val filePath: String) : Effect()
-//        data class NavigateTo(val route: String) : Effect()
+        object SavePicture : Effect()
+        object NavigateBack : Effect()
 
         object PauseRecording : Effect()
         object ResumeRecording : Effect()

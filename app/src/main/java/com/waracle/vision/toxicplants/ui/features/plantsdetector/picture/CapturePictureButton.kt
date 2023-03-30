@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants.camera.capture
+package com.waracle.vision.toxicplants.ui.features.plantsdetector.picture
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource

@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants
+package com.waracle.vision.toxicplants.ui.features.utils
 
 import android.Manifest
 import androidx.compose.foundation.layout.Column

@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants
+package com.waracle.vision.toxicplants.plantdetector
 
 import android.graphics.Bitmap
 import android.util.Log
@@ -32,7 +32,7 @@ class PlantDetector @Inject constructor() {
     private lateinit var probabilityBuffer: TensorBuffer
     private lateinit var predictionLabels: List<String>
 
-    val message = MutableStateFlow("Waiting")
+    val message = MutableStateFlow("")
 
     init {
         val conditions = CustomModelDownloadConditions.Builder().build()
