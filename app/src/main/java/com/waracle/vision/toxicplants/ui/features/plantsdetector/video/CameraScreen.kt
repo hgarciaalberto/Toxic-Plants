@@ -155,8 +155,6 @@ private fun CameraContent(
         }
     } else {
 
-        RectanglesOverlay(boundingBoxes = objectsBoundary)
-        
         Box(modifier = Modifier.fillMaxSize()) {
 
             cameraLens?.let {
@@ -204,6 +202,8 @@ private fun CameraContent(
                 }
             }
         }
+
+        RectanglesOverlay(boundingBoxes = objectsBoundary)
     }
 }
 
