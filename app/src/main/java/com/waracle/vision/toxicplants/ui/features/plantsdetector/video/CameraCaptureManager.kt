@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.camera.core.*
+import androidx.camera.core.ImageAnalysis.Analyzer
 import androidx.camera.core.impl.utils.executor.CameraXExecutors
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
@@ -22,17 +23,13 @@ import androidx.core.util.Consumer
 import androidx.lifecycle.*
 import com.google.common.util.concurrent.ListenableFuture
 import com.waracle.vision.toxicplants.takePicture
-import com.waracle.vision.toxicplants.toBitmap
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
 class CameraCaptureManager private constructor(
     private val builder: Builder
-) : LifecycleEventObserver {
+) : LifecycleEventObserver, Analyzer {
 
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var videoCapture: VideoCapture<Recorder>
@@ -134,13 +131,7 @@ class CameraCaptureManager private constructor(
                         build()
                     }
                     .apply {
-                        setAnalyzer(CameraXExecutors.ioExecutor()) { imageProxy ->
-                            CoroutineScope(Dispatchers.IO).launch {
-                                delay(700)
-                                listener?.onProcessFrame(imageProxy.toBitmap())
-                                imageProxy.close()
-                            }
-                        }
+                        setAnalyzer(CameraXExecutors.ioExecutor(), this@CameraCaptureManager)
                     }
 
                 val useCases = arrayListOf<UseCase>().apply {
@@ -172,6 +163,13 @@ class CameraCaptureManager private constructor(
             }
         }
         return cameraPreview
+    }
+
+    override fun analyze(imageProxy: ImageProxy) {
+//        CoroutineScope(Dispatchers.IO).launch {
+//            delay(700)
+        listener?.onProcessFrame(imageProxy)
+//        }
     }
 
     fun updatePreview(previewState: PreviewState, previewView: View) {
@@ -247,7 +245,7 @@ class CameraCaptureManager private constructor(
         fun recordingPaused()
         fun recordingCompleted(outputUri: Uri)
         fun onError(throwable: Throwable?)
-        fun onProcessFrame(bitmap: Bitmap?)
+        fun onProcessFrame(bitmap: Any?)
         fun onTakePicture(bitmap: Bitmap?)
     }
 

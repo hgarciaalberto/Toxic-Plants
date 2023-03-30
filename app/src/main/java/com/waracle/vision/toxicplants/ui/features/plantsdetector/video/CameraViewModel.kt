@@ -5,16 +5,14 @@ package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
-import androidx.camera.core.CameraInfo
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.TorchState
+import androidx.camera.core.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
 import com.waracle.vision.toxicplants.R
+import com.waracle.vision.toxicplants.objectdetector.ObjectDetectorProcessor
 import com.waracle.vision.toxicplants.plantdetector.PlantDetector
 import com.waracle.vision.toxicplants.rotate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,11 +22,13 @@ import javax.inject.Inject
 
 private const val TAG = "RecordingViewModel"
 
+@ExperimentalGetImage
 @HiltViewModel
 class CameraViewModel @Inject constructor(
     private val fileManager: FileManager,
     val permissionsHandler: PermissionsHandler,
-    val plantDetector: PlantDetector
+    val plantDetector: PlantDetector,
+    val objectDetector: ObjectDetectorProcessor
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(State())
@@ -189,6 +189,9 @@ class CameraViewModel @Inject constructor(
         _permissionMessage.emit(plantDetector.processImage(bitmap.rotate()))
     }
 
+    fun analiseImageProxy(imageProxy: ImageProxy) = viewModelScope.launch {
+        _permissionMessage.emit(objectDetector.processImage(imageProxy).toString())
+    }
 
     data class State(
         val lens: Int? = null,

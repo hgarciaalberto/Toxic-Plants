@@ -1,17 +1,15 @@
 package com.waracle.vision.toxicplants.objectdetector
 
-import android.graphics.Bitmap
 import android.graphics.Rect
 import android.media.Image
 import android.util.Log
 import androidx.camera.core.ImageProxy
-import com.google.android.gms.tasks.Task
 import com.google.mlkit.common.model.LocalModel
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.objects.DetectedObject
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.ObjectDetector
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions
+import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -20,6 +18,8 @@ import kotlin.coroutines.suspendCoroutine
 class ObjectDetectorProcessor @Inject constructor() : Detector {
 
     private val objectDetector = createObjectDetector()
+
+    val objectBoundary = MutableStateFlow<Rect?>(null)
 
     private fun createObjectDetector(): ObjectDetector {
 
@@ -50,6 +50,9 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                     .addOnSuccessListener { detectedObjects ->
                         Log.d(TAG, "Found objects processImage: ${detectedObjects.size}")
                         detectedObjects.firstOrNull()?.let { detectedObject ->
+
+                            objectBoundary.value = detectedObject.boundingBox
+
                             val boundingBox: Rect = detectedObject.boundingBox
                             val clippedBox = Rect(
                                 maxOf(0, boundingBox.left),

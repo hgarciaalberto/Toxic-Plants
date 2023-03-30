@@ -2,10 +2,13 @@ package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.Manifest
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.net.Uri
 import android.util.Log
 import android.util.Size
 import androidx.camera.core.CameraInfo
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.TorchState
 import androidx.camera.core.TorchState.OFF
 import androidx.camera.core.TorchState.ON
@@ -28,11 +31,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
+import com.waracle.vision.toxicplants.camera.boxes.RectanglesOverlay
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
 import java.util.*
 
 @OptIn(ExperimentalPermissionsApi::class)
+@ExperimentalGetImage
 @Composable
 internal fun CameraScreen(
     navigation: NavController,
@@ -45,9 +50,10 @@ internal fun CameraScreen(
     val state by cameraViewModel.state.collectAsState()
     val permissionMessage by cameraViewModel.permissionMessage.collectAsStateWithLifecycle()
     val detectionMessage by cameraViewModel.plantDetector.message.collectAsStateWithLifecycle()
+    val objectBoundary by cameraViewModel.objectDetector.objectBoundary.collectAsStateWithLifecycle()
 
     val listener = remember(cameraViewModel) {
-        object : CameraCaptureManager.Listener {
+        @ExperimentalGetImage object : CameraCaptureManager.Listener {
             override fun onInitialised(cameraLensInfo: HashMap<Int, CameraInfo>) {
                 cameraViewModel.onEvent(CameraViewModel.Event.CameraInitialized(cameraLensInfo))
             }
@@ -68,8 +74,11 @@ internal fun CameraScreen(
                 cameraViewModel.onEvent(CameraViewModel.Event.Error(throwable))
             }
 
-            override fun onProcessFrame(bitmap: Bitmap?) {
-                bitmap?.let { cameraViewModel.analiseImage(it) }
+            override fun onProcessFrame(bitmap: Any?) {
+                when (bitmap) {
+                    is Bitmap -> cameraViewModel.analiseImage(bitmap)
+                    is ImageProxy -> cameraViewModel.analiseImageProxy(bitmap)
+                }
             }
 
             override fun onTakePicture(bitmap: Bitmap?) {
@@ -95,6 +104,7 @@ internal fun CameraScreen(
                 "$permissionMessage"
             else
                 "$detectionMessage",
+            objectBoundary,
             captureType = captureType,
             allPermissionsGranted = state.multiplePermissionsState?.allPermissionsGranted ?: false,
             cameraLens = state.lens,
@@ -127,6 +137,7 @@ internal fun CameraScreen(
 @Composable
 private fun CameraContent(
     message: String,
+    objectBoundary: Rect?,
     captureType: CaptureType,
     allPermissionsGranted: Boolean,
     cameraLens: Int?,
@@ -142,6 +153,10 @@ private fun CameraContent(
             onEvent(CameraViewModel.Event.PermissionRequired)
         }
     } else {
+
+        if (objectBoundary != null)
+            RectanglesOverlay(rects = arrayListOf(objectBoundary))
+
         Box(modifier = Modifier.fillMaxSize()) {
 
             cameraLens?.let {
