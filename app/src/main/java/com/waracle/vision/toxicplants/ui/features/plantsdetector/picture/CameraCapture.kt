@@ -1,6 +1,5 @@
 package com.waracle.vision.toxicplants.ui.features.plantsdetector.picture
 
-import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
@@ -22,6 +21,7 @@ import com.waracle.vision.toxicplants.getCameraProvider
 import com.waracle.vision.toxicplants.takePicture
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.File
 
 
@@ -73,7 +73,7 @@ fun CameraCapture(
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, previewUseCase, imageCaptureUseCase)
             } catch (ex: Exception) {
-                Log.e("CameraCapture", "Failed to bind camera use cases", ex)
+                Timber.e(ex, "Failed to bind camera use cases")
             }
         }
     }

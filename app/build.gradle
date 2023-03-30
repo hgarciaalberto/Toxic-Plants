@@ -108,6 +108,9 @@ dependencies {
     kaptAndroidTest "com.google.dagger:hilt-compiler:2.44"
     androidTestImplementation "com.google.dagger:hilt-android-testing:2.44"
 
+    // Timber
+    implementation 'com.jakewharton.timber:timber:5.0.1'
+
 
     // Test
     testImplementation 'junit:junit:4.13.2'
