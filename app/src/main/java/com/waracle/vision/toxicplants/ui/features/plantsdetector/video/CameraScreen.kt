@@ -3,7 +3,6 @@ package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 import android.Manifest
 import android.graphics.Bitmap
 import android.net.Uri
-import android.util.Log
 import android.util.Size
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.TorchState
@@ -30,6 +29,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
+import timber.log.Timber
 import java.util.*
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -112,7 +112,7 @@ internal fun CameraScreen(
             when (it) {
                 is CameraViewModel.Effect.NavigateBack -> navigation.navigateUp()
                 is CameraViewModel.Effect.ShowMessage -> {
-                    Log.i("CameraScreen", "message: ${it.message}")
+                    Timber.i("message: ${it.message}")
                 }
                 is CameraViewModel.Effect.RecordVideo -> captureManager.startRecording(it.filePath)
                 is CameraViewModel.Effect.SavePicture -> captureManager.savePicture()
@@ -168,7 +168,7 @@ private fun CameraContent(
 
                     CameraIcon(
                         modifier = Modifier
-                            .size(90.dp)
+                            .size(100.dp)
                             .align(Alignment.BottomCenter)
                             .padding(20.dp, bottom = 40.dp),
                         onTapped = { onEvent(CameraViewModel.Event.PictureTapped) }

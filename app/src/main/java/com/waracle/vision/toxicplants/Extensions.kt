@@ -2,7 +2,6 @@ package com.waracle.vision.toxicplants
 
 import android.content.Context
 import android.graphics.*
-import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -10,6 +9,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.concurrent.Executor
@@ -24,10 +24,10 @@ suspend fun ImageCapture.takePicture(executor: Executor): File {
     val photoFile = withContext(Dispatchers.IO) {
         kotlin.runCatching {
             File.createTempFile("image", ".jpg").also {
-                Log.d("TakePicture", "${it.absoluteFile}")
+                Timber.d("${it.absoluteFile}")
             }
         }.getOrElse { ex ->
-            Log.e("TakePicture", "Failed to create temporary file", ex)
+            Timber.e("Failed to create temporary file", ex)
             File("/dev/null")
         }
     }
@@ -40,7 +40,7 @@ suspend fun ImageCapture.takePicture(executor: Executor): File {
             }
 
             override fun onError(ex: ImageCaptureException) {
-                Log.e("TakePicture", "Image capture failed", ex)
+                Timber.e(ex, "Image capture failed")
                 continuation.resumeWithException(ex)
             }
         })

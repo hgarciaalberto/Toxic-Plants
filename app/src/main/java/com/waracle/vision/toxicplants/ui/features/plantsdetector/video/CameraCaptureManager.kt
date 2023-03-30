@@ -6,7 +6,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.camera.core.*
@@ -28,6 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.File
 
 class CameraCaptureManager private constructor(
@@ -157,7 +157,7 @@ class CameraCaptureManager private constructor(
                             add(imageAnalyzer)
                         }
                         else -> {
-                            Log.i("CameraCaptureManager", "Type not supported")
+                            Timber.i("Type not supported")
                         }
                     }
                 }.toTypedArray()

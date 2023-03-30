@@ -1,7 +1,6 @@
 package com.waracle.vision.toxicplants.plantdetector
 
 import android.graphics.Bitmap
-import android.util.Log
 import com.google.firebase.ml.modeldownloader.CustomModel
 import com.google.firebase.ml.modeldownloader.CustomModelDownloadConditions
 import com.google.firebase.ml.modeldownloader.DownloadType
@@ -15,6 +14,7 @@ import org.tensorflow.lite.support.image.ops.ResizeOp
 import org.tensorflow.lite.support.metadata.MetadataExtractor
 import org.tensorflow.lite.support.metadata.schema.AssociatedFileType
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import timber.log.Timber
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
@@ -85,7 +85,7 @@ class PlantDetector @Inject constructor() {
             }
 
             else -> {
-                Log.e(TAG, "Unexpected model type downloaded.")
+                Timber.e("Unexpected model type downloaded.")
             }
         }
     }
@@ -150,7 +150,7 @@ class PlantDetector @Inject constructor() {
             }
 
             val elapsedTime = (System.nanoTime() - startTime) / 1000000
-            Log.d(TAG, "Inference time = " + elapsedTime + "ms")
+            Timber.d("Inference time = " + elapsedTime + "ms")
 
             return getOutputString(probabilityBuffer.floatArray)
         }
@@ -161,7 +161,8 @@ class PlantDetector @Inject constructor() {
         val label = predictionLabels[maxIndex]
         val percent = output[maxIndex] / 255 * 100
         return """
-          Prediction Result: %s
+          Prediction Result:
+          %s
           Confidence: %.2f%%
         """.trimIndent().format(label, percent)
     }
