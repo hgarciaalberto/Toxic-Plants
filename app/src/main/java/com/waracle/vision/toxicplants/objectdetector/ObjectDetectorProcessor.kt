@@ -37,46 +37,52 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
 
         return ObjectDetection.getClient(options)
     }
-    @androidx.camera.core.ExperimentalGetImage
-    override suspend fun processImage(imageProxy: ImageProxy): Detector.DetectionResult = suspendCoroutine { continuation ->
-        Log.d(TAG, "Image resolution: ${imageProxy.width} x ${imageProxy.height}")
-        val image: Image? = imageProxy.image
-        image?.let {img->
-            val iImage = InputImage
-                .fromMediaImage(img,imageProxy.imageInfo.rotationDegrees)
-            objectDetector.process(iImage)
-                .addOnSuccessListener { detectedObjects ->
-                    Log.d(TAG, "Found objects processImage: ${detectedObjects.size}")
-                    detectedObjects.firstOrNull()?.let { detectedObject ->
-                        val boundingBox: Rect = detectedObject.boundingBox
-                        val clippedBox = Rect(
-                            maxOf(0, boundingBox.left),
-                            maxOf(0, boundingBox.top),
-                            minOf(imageProxy.width, boundingBox.right),
-                            minOf(imageProxy.height, boundingBox.bottom)
-                        )
 
-                        val trackingId = detectedObject.trackingId
-                        for (label in detectedObject.labels) {
-                            val text = label.text
-                            val index = label.index
-                            val confidence = label.confidence
-                            Log.d(TAG, "Detected object with label: $text, confidence: $confidence")
-                            val result = Detector.DetectionResult.SUCCESS(
-                                label = text,
-                                confidence = confidence,
-                                bounds = clippedBox
+    @androidx.camera.core.ExperimentalGetImage
+    override suspend fun processImage(imageProxy: ImageProxy): Detector.DetectionResult =
+        suspendCoroutine { continuation ->
+            Log.d(TAG, "Image resolution: ${imageProxy.width} x ${imageProxy.height}")
+            val image: Image? = imageProxy.image
+            image?.let { img ->
+                val iImage = InputImage
+                    .fromMediaImage(img, imageProxy.imageInfo.rotationDegrees)
+                objectDetector.process(iImage)
+                    .addOnSuccessListener { detectedObjects ->
+                        Log.d(TAG, "Found objects processImage: ${detectedObjects.size}")
+                        detectedObjects.firstOrNull()?.let { detectedObject ->
+                            val boundingBox: Rect = detectedObject.boundingBox
+                            val clippedBox = Rect(
+                                maxOf(0, boundingBox.left),
+                                maxOf(0, boundingBox.top),
+                                minOf(imageProxy.width, boundingBox.right),
+                                minOf(imageProxy.height, boundingBox.bottom)
                             )
-                            continuation.resume(result)
+
+                            val trackingId = detectedObject.trackingId
+                            for (label in detectedObject.labels) {
+                                val text = label.text
+                                val index = label.index
+                                val confidence = label.confidence
+                                Log.d(
+                                    TAG,
+                                    "Detected object with label: $text, confidence: $confidence"
+                                )
+                                val result = Detector.DetectionResult.SUCCESS(
+                                    label = text,
+                                    confidence = confidence,
+                                    bounds = clippedBox
+                                )
+                                continuation.resume(result)
+                            }
                         }
                     }
-                }
-                .addOnFailureListener { Log.i(TAG,it.toString()) }
-                .addOnCompleteListener {
-                    image.close()
-                    imageProxy.close() }
+                    .addOnFailureListener { Log.i(TAG, it.toString()) }
+                    .addOnCompleteListener {
+                        image.close()
+                        imageProxy.close()
+                    }
+            }
         }
-    }
 
     companion object {
         val TAG = this::class.java.toString()
