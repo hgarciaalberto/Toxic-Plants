@@ -31,17 +31,20 @@ fun BoundingBoxOverlay(
     boxColor: Color = Color.Red,
     boxStrokeWidth: Float = 2.dp.value
 ) {
+    Log.d("test", "SCREEN SIZE: ${previewSize}")
     Canvas(modifier = modifier) {
-        val minScale = minOf(previewSize.width / imageProxySize.width, previewSize.height / imageProxySize.height)
-        val offsetX = (size.width - imageProxySize.width * minScale) / 2f
-        val offsetY = (size.height - imageProxySize.height * minScale) / 2f
+        val scaleX = previewSize.width / imageProxySize.width
+        val scaleY = previewSize.height / imageProxySize.height
+
+        val offsetX = (size.width - imageProxySize.width * scaleX) / 2f
+        val offsetY = (size.height - imageProxySize.height * scaleY) / 2f
 
         for (box in boundingBoxes) {
             val scaledBox = Rect(
-                (box.left * minScale + offsetX).toInt(),
-                (box.top * minScale + offsetY).toInt(),
-                (box.right * minScale + offsetX).toInt(),
-                (box.bottom * minScale + offsetY).toInt()
+                (box.left * scaleX + offsetX).toInt(),
+                (box.top * scaleY + offsetY).toInt(),
+                (box.right * scaleX + offsetX).toInt(),
+                (box.bottom * scaleY + offsetY).toInt()
             )
 
             drawRect(
@@ -54,17 +57,16 @@ fun BoundingBoxOverlay(
     }
 }
 
-
 @Preview(showSystemUi = true, showBackground = true, device = PIXEL_4_XL)
 @Composable
 fun BoundingBoxOverlayPreview() {
     ToxicPlantsTheme {
         BoundingBoxOverlay(
             boundingBoxes = arrayListOf(
-                Rect(Rect(41, 1349, - 1658, 1856))
+                Rect(Rect(307, 490 ,412, 698))
             ),
-            imageProxySize = Size(1080f, 2340f),
-            previewSize = Size(1080f, 2340f),
+            imageProxySize = Size(360f, 780f),
+            previewSize = Size(1080f, 2400f),
         )
     }
 }
@@ -96,7 +98,7 @@ fun RectanglesOverlayPreview() {
     ToxicPlantsTheme {
         RectanglesOverlay(
             boundingBoxes = arrayListOf(
-                Rect(0, 854 ,1521, 1856)
+                Rect(307, 490 ,412, 698)
             )
         )
     }

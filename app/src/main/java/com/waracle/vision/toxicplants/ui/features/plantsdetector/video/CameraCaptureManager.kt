@@ -166,10 +166,7 @@ class CameraCaptureManager private constructor(
     }
 
     override fun analyze(imageProxy: ImageProxy) {
-//        CoroutineScope(Dispatchers.IO).launch {
-//            delay(700)
         listener?.onProcessFrame(imageProxy)
-//        }
     }
 
     fun updatePreview(previewState: PreviewState, previewView: View) {
