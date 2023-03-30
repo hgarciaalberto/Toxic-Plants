@@ -50,7 +50,8 @@ internal fun CameraScreen(
     val state by cameraViewModel.state.collectAsState()
     val permissionMessage by cameraViewModel.permissionMessage.collectAsStateWithLifecycle()
     val detectionMessage by cameraViewModel.plantDetector.message.collectAsStateWithLifecycle()
-    val objectBoundary by cameraViewModel.objectDetector.objectBoundary.collectAsStateWithLifecycle()
+    val objectBoundary by cameraViewModel.objectsBoundary.collectAsStateWithLifecycle()
+
 
     val listener = remember(cameraViewModel) {
         @ExperimentalGetImage object : CameraCaptureManager.Listener {
@@ -100,11 +101,11 @@ internal fun CameraScreen(
 
     CompositionLocalProvider(LocalCameraCaptureManager provides captureManager) {
         CameraContent(
-            message = if (permissionMessage.isNotBlank())
+            message = if (permissionMessage.toString().isNotBlank())
                 "$permissionMessage"
             else
                 "$detectionMessage",
-            objectBoundary,
+            objectsBoundary = objectBoundary,
             captureType = captureType,
             allPermissionsGranted = state.multiplePermissionsState?.allPermissionsGranted ?: false,
             cameraLens = state.lens,
@@ -137,7 +138,7 @@ internal fun CameraScreen(
 @Composable
 private fun CameraContent(
     message: String,
-    objectBoundary: Rect?,
+    objectsBoundary: List<Rect>,
     captureType: CaptureType,
     allPermissionsGranted: Boolean,
     cameraLens: Int?,
@@ -154,9 +155,8 @@ private fun CameraContent(
         }
     } else {
 
-        if (objectBoundary != null)
-            RectanglesOverlay(rects = arrayListOf(objectBoundary))
-
+        RectanglesOverlay(boundingBoxes = objectsBoundary)
+        
         Box(modifier = Modifier.fillMaxSize()) {
 
             cameraLens?.let {

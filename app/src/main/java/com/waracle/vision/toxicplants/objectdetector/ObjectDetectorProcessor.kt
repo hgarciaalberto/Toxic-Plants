@@ -19,8 +19,6 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
 
     private val objectDetector = createObjectDetector()
 
-    val objectBoundary = MutableStateFlow<Rect?>(null)
-
     private fun createObjectDetector(): ObjectDetector {
 
         val localModel = LocalModel.Builder()
@@ -50,8 +48,6 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                     .addOnSuccessListener { detectedObjects ->
                         Log.d(TAG, "Found objects processImage: ${detectedObjects.size}")
                         detectedObjects.firstOrNull()?.let { detectedObject ->
-
-                            objectBoundary.value = detectedObject.boundingBox
 
                             val boundingBox: Rect = detectedObject.boundingBox
                             val clippedBox = Rect(

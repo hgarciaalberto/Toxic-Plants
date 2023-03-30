@@ -1,6 +1,7 @@
 package com.waracle.vision.toxicplants.camera.boxes
 
 import android.graphics.Rect
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -60,7 +61,7 @@ fun BoundingBoxOverlayPreview() {
     ToxicPlantsTheme {
         BoundingBoxOverlay(
             boundingBoxes = arrayListOf(
-                Rect(0, 976, 926, 1080)
+                Rect(Rect(41, 1349, - 1658, 1856))
             ),
             imageProxySize = Size(1080f, 2340f),
             previewSize = Size(1080f, 2340f),
@@ -71,22 +72,18 @@ fun BoundingBoxOverlayPreview() {
 @Composable
 fun RectanglesOverlay(
     modifier: Modifier = Modifier,
-    rects: List<Rect>,
-    color: Color = Color.Red,
-    strokeWidth: Dp = 4.dp
+    boundingBoxes: List<Rect>,
+    boxColor: Color = Color.Red,
+    boxStrokeWidth: Float = 2.dp.value
 ) {
-    Box(modifier = modifier) {
-        for (rect in rects) {
-            Box(
-                modifier = Modifier
-                    .offset { IntOffset(rect.left.toInt(), rect.top.toInt()) }
-                    .size(rect.width().dp, rect.height().dp)
-                    .background(Color.Transparent, shape = RectangleShape)
-                    .border(
-                        strokeWidth,
-                        color = color,
-                        shape = RectangleShape
-                    )
+    Canvas(modifier = modifier) {
+        for (box in boundingBoxes) {
+            Log.d("test", "draw RECT: ${box}")
+            drawRect(
+                color = boxColor,
+                topLeft = Offset(box.left.toFloat(), box.top.toFloat()),
+                size = Size(box.width().toFloat(), box.height().toFloat()),
+                style = Stroke(width = boxStrokeWidth)
             )
         }
     }
@@ -98,8 +95,8 @@ fun RectanglesOverlay(
 fun RectanglesOverlayPreview() {
     ToxicPlantsTheme {
         RectanglesOverlay(
-            rects = arrayListOf(
-                Rect(0, 976, 926, 1080)
+            boundingBoxes = arrayListOf(
+                Rect(0, 854 ,1521, 1856)
             )
         )
     }

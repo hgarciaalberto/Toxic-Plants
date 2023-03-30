@@ -3,6 +3,7 @@
 package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.net.Uri
 import android.util.Log
 import androidx.camera.core.*
@@ -12,6 +13,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
 import com.waracle.vision.toxicplants.R
+import com.waracle.vision.toxicplants.objectdetector.Detector
+import com.waracle.vision.toxicplants.objectdetector.InfoMessage.Companion.toInfoMessage
+import com.waracle.vision.toxicplants.objectdetector.Message
 import com.waracle.vision.toxicplants.objectdetector.ObjectDetectorProcessor
 import com.waracle.vision.toxicplants.plantdetector.PlantDetector
 import com.waracle.vision.toxicplants.rotate
@@ -37,8 +41,10 @@ class CameraViewModel @Inject constructor(
     private val _effect = MutableSharedFlow<Effect>()
     val effect: SharedFlow<Effect> = _effect
 
-    private val _permissionMessage = MutableStateFlow("Waiting")
-    val permissionMessage: StateFlow<String> = _permissionMessage
+    private val _permissionMessage = MutableStateFlow<Message>("Waiting".toInfoMessage())
+    val permissionMessage: StateFlow<Message> = _permissionMessage
+
+    val objectsBoundary: MutableStateFlow<List<Rect>> = MutableStateFlow(listOf())
 
     init {
         permissionsHandler
@@ -48,7 +54,7 @@ class CameraViewModel @Inject constructor(
             }
             .catch {
                 viewModelScope.launch {
-                    _permissionMessage.emit(it.message ?: "Permission exception")
+                    _permissionMessage.emit((it.message ?: "Permission exception").toInfoMessage())
                     Log.e(TAG, it.message, it)
                 }
             }
@@ -186,11 +192,15 @@ class CameraViewModel @Inject constructor(
     }
 
     fun analiseImage(bitmap: Bitmap) = viewModelScope.launch {
-        _permissionMessage.emit(plantDetector.processImage(bitmap.rotate()))
+        _permissionMessage.emit(plantDetector.processImage(bitmap.rotate()).toInfoMessage())
     }
 
     fun analiseImageProxy(imageProxy: ImageProxy) = viewModelScope.launch {
-        _permissionMessage.emit(objectDetector.processImage(imageProxy).toString())
+        val result = objectDetector.processImage(imageProxy)
+        _permissionMessage.emit(result)
+        if(result is Detector.DetectionResult.SUCCESS && result.bounds != null) {
+            objectsBoundary.value = listOf(result.bounds)
+        }
     }
 
     data class State(
