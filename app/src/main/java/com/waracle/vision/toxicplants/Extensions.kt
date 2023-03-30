@@ -2,7 +2,9 @@ package com.waracle.vision.toxicplants
 
 import android.content.Context
 import android.graphics.*
+import android.media.Image
 import android.util.Log
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -69,31 +71,4 @@ fun Bitmap.rotate(degrees: Float = 90f): Bitmap {
     this.recycle()
 
     return rotatedBitmap
-}
-
-fun ImageProxy.toBitmap(): Bitmap? {
-    val nv21Buffer = planes[0].buffer
-    val ySize = nv21Buffer.remaining()
-    val uvSize = planes[1].buffer.remaining() + planes[2].buffer.remaining()
-    val bufferSize = ySize + uvSize
-
-    val data = ByteArray(bufferSize)
-    nv21Buffer.get(data, 0, ySize)
-
-    val uvBuffer = planes[2].buffer.duplicate()
-    val uv = ByteArray(uvSize)
-    uvBuffer.get(uv, 0, planes[2].buffer.remaining())
-    var i = 0
-    while (i < uvSize - 1) {
-        data[ySize + i] = uv[i + 1]
-        data[ySize + i + 1] = uv[i]
-        i += 2
-    }
-
-    val yuvImage = YuvImage(data, ImageFormat.NV21, width, height, null)
-    val outputStream = ByteArrayOutputStream()
-    yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, outputStream)
-    val jpegByteArray = outputStream.toByteArray()
-
-    return BitmapFactory.decodeByteArray(jpegByteArray, 0, jpegByteArray.size)
 }

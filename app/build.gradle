@@ -101,6 +101,9 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
     implementation 'org.tensorflow:tensorflow-lite-metadata:0.2.0'
 
+    //Object detection
+    implementation 'com.google.mlkit:object-detection-custom:17.0.0'
+
     // Dagger - Hilt
     implementation 'com.google.dagger:hilt-android:2.44'
     implementation 'androidx.hilt:hilt-navigation-compose:1.1.0-alpha01'
