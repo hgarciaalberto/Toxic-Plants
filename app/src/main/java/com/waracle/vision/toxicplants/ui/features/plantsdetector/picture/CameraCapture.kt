@@ -17,9 +17,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.waracle.vision.toxicplants.camera.executor
-import com.waracle.vision.toxicplants.camera.getCameraProvider
-import com.waracle.vision.toxicplants.camera.takePicture
+import com.waracle.vision.toxicplants.executor
+import com.waracle.vision.toxicplants.getCameraProvider
+import com.waracle.vision.toxicplants.takePicture
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import java.io.File

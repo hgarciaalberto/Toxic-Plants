@@ -32,7 +32,7 @@ class PlantDetector @Inject constructor() {
     private lateinit var probabilityBuffer: TensorBuffer
     private lateinit var predictionLabels: List<String>
 
-    val message = MutableStateFlow("Waiting")
+    val message = MutableStateFlow("")
 
     init {
         val conditions = CustomModelDownloadConditions.Builder().build()
@@ -116,9 +116,9 @@ class PlantDetector @Inject constructor() {
         return labels
     }
 
-    fun processImage(bitmap: Bitmap) {
+    fun processImage(bitmap: Bitmap): String {
         if (!this::interpreter.isInitialized) {
-            message.value = "TF Lite Interpreter is not initialized yet."
+            return "TF Lite Interpreter is not initialized yet."
         } else {
 
             val inputShape = interpreter.getInputTensor(0).shape()
@@ -152,7 +152,7 @@ class PlantDetector @Inject constructor() {
             val elapsedTime = (System.nanoTime() - startTime) / 1000000
             Log.d(TAG, "Inference time = " + elapsedTime + "ms")
 
-            message.value = getOutputString(probabilityBuffer.floatArray)
+            return getOutputString(probabilityBuffer.floatArray)
         }
     }
 

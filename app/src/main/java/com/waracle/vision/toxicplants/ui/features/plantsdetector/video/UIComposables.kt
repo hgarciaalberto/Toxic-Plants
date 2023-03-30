@@ -3,23 +3,30 @@ package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 import android.text.format.DateUtils
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.TorchState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
+import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.waracle.vision.toxicplants.R
+import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
 
 @Composable
 fun CameraCaptureIcon(modifier: Modifier, onTapped: () -> Unit) {
@@ -99,6 +106,7 @@ fun CameraPlayIconSmall(modifier: Modifier = Modifier, onTapped: () -> Unit) {
     )
 }
 
+
 @Composable
 fun CameraRecordIcon(modifier: Modifier = Modifier, onTapped: () -> Unit) {
     IconButton(
@@ -113,6 +121,63 @@ fun CameraRecordIcon(modifier: Modifier = Modifier, onTapped: () -> Unit) {
             )
         })
 }
+
+@Composable
+fun CameraPictureIcon(modifier: Modifier = Modifier, onTapped: () -> Unit) {
+    IconButton(
+        modifier = Modifier
+            .then(modifier),
+        onClick = { onTapped() },
+        content = {
+            Image(
+
+                modifier = Modifier.size(60.dp),
+                painter = painterResource(id = R.drawable.ic_camera),
+                contentDescription = null,
+            )
+        })
+}
+
+@Composable
+fun CameraIcon(
+    modifier: Modifier = Modifier,
+    circleColor: Color = Color.Red,
+    borderColor: Color = Color.White,
+    borderWidth: Dp = 4.dp,
+    iconColor: Color = Color.White,
+    onTapped: () -> Unit
+) {
+    Box(modifier = modifier) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val radius = size.minDimension / 2
+            drawCircle(circleColor, radius)
+            drawCircle(
+                borderColor,
+                radius - (borderWidth.toPx() / 2),
+                style = Stroke(width = borderWidth.toPx())
+            )
+        }
+        IconButton(
+            modifier = Modifier.size(55.dp).align(Alignment.Center),
+            onClick = onTapped
+        ) {
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = null,
+                tint = iconColor
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0)
+@Composable
+fun CameraIcon2Preview() {
+    ToxicPlantsTheme {
+        CameraIcon {}
+    }
+}
+
 
 @Composable
 fun CameraStopIcon(modifier: Modifier = Modifier, onTapped: () -> Unit) {
@@ -211,18 +276,43 @@ internal fun RequestPermission(message: Int, onClick: () -> Unit) {
 }
 
 @Composable
-fun Timer(modifier: Modifier = Modifier, seconds: Int) {
+fun Timer(
+    modifier: Modifier = Modifier,
+    seconds: Int,
+    message: String
+) {
     if (seconds > 0) {
-        Box(modifier = Modifier.padding(vertical = 24.dp).then(modifier)) {
+        Column(modifier = Modifier.padding(vertical = 24.dp).then(modifier)) {
             Text(
                 text = DateUtils.formatElapsedTime(seconds.toLong()),
                 color = Color.White,
                 modifier = Modifier
                     .background(color = Color.Red)
-                    .padding(horizontal = 10.dp)
+                    .padding(horizontal = 10.dp, vertical = 5.dp)
+                    .align(Alignment.CenterHorizontally)
                     .then(modifier)
             )
-        }
 
+            Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+                    .background(Color.White),
+                text = message,
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0)
+@Composable
+fun TimerPreview() {
+    ToxicPlantsTheme {
+        Timer(
+            seconds = 200,
+            message = "Message",
+        )
     }
 }

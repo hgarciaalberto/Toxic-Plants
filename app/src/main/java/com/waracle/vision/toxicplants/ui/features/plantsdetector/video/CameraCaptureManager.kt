@@ -4,7 +4,9 @@ package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.camera.core.*
@@ -19,19 +21,27 @@ import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
 import androidx.lifecycle.*
 import com.google.common.util.concurrent.ListenableFuture
-import com.waracle.vision.toxicplants.camera.rotate
-import com.waracle.vision.toxicplants.camera.toBitmap
+import com.waracle.vision.toxicplants.takePicture
+import com.waracle.vision.toxicplants.toBitmap
+import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
-class VideoCaptureManager private constructor(private val builder: Builder) :
-    LifecycleEventObserver {
+class CameraCaptureManager private constructor(
+    private val builder: Builder
+) : LifecycleEventObserver {
 
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var videoCapture: VideoCapture<Recorder>
+
+    private val imageCapture: ImageCapture by lazy {
+        ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+            .build()
+    }
 
     private lateinit var activeRecording: Recording
 
@@ -110,8 +120,8 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
                     }
 
                 //Create Video Capture use case
-//                    val recorder = Recorder.Builder().build()
-//                    videoCapture = VideoCapture.withOutput(recorder)
+                val recorder = Recorder.Builder().setExecutor(CameraXExecutors.ioExecutor()).build()
+                videoCapture = VideoCapture.withOutput(recorder)
 
                 //Create an Analyzer use case
                 val imageAnalyzer = ImageAnalysis.Builder()
@@ -125,21 +135,37 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
                     }
                     .apply {
                         setAnalyzer(CameraXExecutors.ioExecutor()) { imageProxy ->
-
                             CoroutineScope(Dispatchers.IO).launch {
                                 delay(700)
-                                listener?.processFrame(imageProxy.toBitmap()?.rotate())
+                                listener?.onProcessFrame(imageProxy.toBitmap())
                                 imageProxy.close()
                             }
                         }
                     }
 
+                val useCases = arrayListOf<UseCase>().apply {
+                    when (builder.captureType) {
+                        CaptureType.IMAGE -> {
+                            add(preview)
+//                            add(imageAnalyzer)
+                            add(imageCapture)
+                        }
+
+                        CaptureType.VIDEO -> {
+                            add(preview)
+//                            add(videoCapture)
+                            add(imageAnalyzer)
+                        }
+                        else -> {
+                            Log.i("CameraCaptureManager", "Type not supported")
+                        }
+                    }
+                }.toTypedArray()
+
                 cameraProvider.bindToLifecycle(
                     getLifeCycleOwner(),
                     cameraSelector,
-                    preview,
-//                        videoCapture,
-                    imageAnalyzer
+                    *useCases,
                 ).apply {
                     cameraControl.enableTorch(previewState.torchState == TorchState.ON)
                 }
@@ -173,6 +199,15 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
             .prepareRecording(getContext(), outputOptions)
             .apply { withAudioEnabled() }
             .start(ContextCompat.getMainExecutor(getContext()), videoRecordingListener)
+    }
+
+    suspend fun savePicture() {
+        imageCapture.takePicture(ContextCompat.getMainExecutor(getContext())).let { file ->
+            BitmapFactory.decodeFile(file.absolutePath).let { bitmap ->
+                listener?.onProcessFrame(bitmap)
+                file.delete()
+            }
+        }
     }
 
     fun pauseRecording() {
@@ -212,7 +247,8 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
         fun recordingPaused()
         fun recordingCompleted(outputUri: Uri)
         fun onError(throwable: Throwable?)
-        fun processFrame(bitmap: Bitmap?)
+        fun onProcessFrame(bitmap: Bitmap?)
+        fun onTakePicture(bitmap: Bitmap?)
     }
 
     class Builder(val context: Context) {
@@ -220,19 +256,27 @@ class VideoCaptureManager private constructor(private val builder: Builder) :
         var lifecycleOwner: LifecycleOwner? = null
             private set
 
+        var captureType: CaptureType? = null
+            private set
+
         fun registerLifecycleOwner(source: LifecycleOwner): Builder {
             this.lifecycleOwner = source
             return this
         }
 
-        fun create(): VideoCaptureManager {
+        fun setCaptureMode(captureType: CaptureType): Builder {
+            this.captureType = captureType
+            return this
+        }
+
+        fun create(): CameraCaptureManager {
             requireNotNull(lifecycleOwner) { "Lifecycle owner is not set" }
-            return VideoCaptureManager(this)
+            return CameraCaptureManager(this)
         }
     }
 
-    private fun Long.fromNanoToSeconds() = (this / (1000 * 1000 * 1000)).toInt()
+    private fun Long.fromNanoToSeconds() = (this / (1_000_000_000)).toInt()
 }
 
-val LocalVideoCaptureManager =
-    compositionLocalOf<VideoCaptureManager> { error("No capture manager found!") }
+val LocalCameraCaptureManager =
+    compositionLocalOf<CameraCaptureManager> { error("No capture manager found!") }

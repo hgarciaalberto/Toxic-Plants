@@ -4,9 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.waracle.vision.toxicplants.camera.navigation.AppList
-import com.waracle.vision.toxicplants.ui.features.plantsdetector.picture.ToxicPlantCaptureScreen
-import com.waracle.vision.toxicplants.ui.features.plantsdetector.video.RecordingScreen
+import com.waracle.vision.toxicplants.ui.features.dashboard.AppList
+import com.waracle.vision.toxicplants.ui.features.plantsdetector.video.CameraScreen
+import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 
 @Composable
 fun AppNavigation() {
@@ -18,10 +18,10 @@ fun AppNavigation() {
         }
 
         composable(route = AppScreens.DetectPlantPicture.route) {
-            ToxicPlantCaptureScreen(navController)
+            CameraScreen(navController, CaptureType.IMAGE)
         }
         composable(route = AppScreens.DetectPlantVideo.route) {
-            RecordingScreen(navController)
+            CameraScreen(navController, CaptureType.VIDEO)
         }
 
         composable(route = AppScreens.DetectModelObjects.route) {

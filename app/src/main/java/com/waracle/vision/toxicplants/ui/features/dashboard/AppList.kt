@@ -1,4 +1,4 @@
-package com.waracle.vision.toxicplants.camera.navigation
+package com.waracle.vision.toxicplants.ui.features.dashboard
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -9,7 +9,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.waracle.vision.toxicplants.navigation.AppScreens
-import com.waracle.vision.toxicplants.ui.features.dashboard.ItemList
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
 
 @Composable
