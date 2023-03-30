@@ -2,9 +2,6 @@ package com.waracle.vision.toxicplants.objectdetector
 
 import android.graphics.Rect
 import androidx.camera.core.ImageProxy
-import com.google.android.gms.tasks.Task
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.objects.DetectedObject
 
 interface Detector {
 
@@ -14,7 +11,11 @@ interface Detector {
             val confidence: Float,
             val bounds: Rect?
         ) : DetectionResult() {
-            override fun toString(): String = "$label \n$confidence\nBounds = ${bounds?.toString()}"
+            override fun toString(): String = """
+                $label 
+                $confidence
+                ${bounds?.toString()}
+            """.trimIndent()
         }
 
         class ERROR(val reason: String) : DetectionResult() {

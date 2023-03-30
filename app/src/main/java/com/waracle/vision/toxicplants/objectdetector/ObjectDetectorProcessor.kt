@@ -10,6 +10,7 @@ import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.ObjectDetector
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -19,7 +20,8 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
 
     private val objectDetector = createObjectDetector()
 
-    val objectBoundary = MutableStateFlow<Rect?>(null)
+    private val _objectBoundary = MutableStateFlow<Rect?>(null)
+    val objectBoundary: StateFlow<Rect?> = _objectBoundary
 
     private fun createObjectDetector(): ObjectDetector {
 
@@ -51,8 +53,6 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                         Log.d(TAG, "Found objects processImage: ${detectedObjects.size}")
                         detectedObjects.firstOrNull()?.let { detectedObject ->
 
-                            objectBoundary.value = detectedObject.boundingBox
-
                             val boundingBox: Rect = detectedObject.boundingBox
                             val clippedBox = Rect(
                                 maxOf(0, boundingBox.left),
@@ -60,6 +60,11 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                                 minOf(imageProxy.width, boundingBox.right),
                                 minOf(imageProxy.height, boundingBox.bottom)
                             )
+
+
+                            Log.d(TAG, "Boundaries - boundingBox: ${detectedObject.boundingBox}")
+                            Log.d(TAG, "Boundaries - clippedBox: $clippedBox")
+                            _objectBoundary.value = clippedBox
 
                             val trackingId = detectedObject.trackingId
                             for (label in detectedObject.labels) {

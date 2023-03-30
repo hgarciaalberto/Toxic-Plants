@@ -190,7 +190,7 @@ class CameraViewModel @Inject constructor(
     }
 
     fun analiseImageProxy(imageProxy: ImageProxy) = viewModelScope.launch {
-        _permissionMessage.emit(objectDetector.processImage(imageProxy).toString())
+        _permissionMessage.value = objectDetector.processImage(imageProxy).toString()
     }
 
     data class State(

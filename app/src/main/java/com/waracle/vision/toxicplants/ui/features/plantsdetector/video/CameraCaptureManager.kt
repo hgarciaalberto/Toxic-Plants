@@ -1,6 +1,5 @@
 package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
-
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
@@ -10,7 +9,6 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.camera.core.*
-import androidx.camera.core.ImageAnalysis.Analyzer
 import androidx.camera.core.impl.utils.executor.CameraXExecutors
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
@@ -23,13 +21,15 @@ import androidx.core.util.Consumer
 import androidx.lifecycle.*
 import com.google.common.util.concurrent.ListenableFuture
 import com.waracle.vision.toxicplants.takePicture
+import com.waracle.vision.toxicplants.toBitmap
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.File
 
+@OptIn(DelicateCoroutinesApi::class)
 class CameraCaptureManager private constructor(
     private val builder: Builder
-) : LifecycleEventObserver, Analyzer {
+) : LifecycleEventObserver {
 
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var videoCapture: VideoCapture<Recorder>
@@ -131,7 +131,14 @@ class CameraCaptureManager private constructor(
                         build()
                     }
                     .apply {
-                        setAnalyzer(CameraXExecutors.ioExecutor(), this@CameraCaptureManager)
+                        setAnalyzer(CameraXExecutors.ioExecutor()) { imageProxy ->
+                            if (builder.captureType == CaptureType.BOUNDARY_OBJECT)
+                                listener?.onProcessFrame(imageProxy)
+                            else {
+                                listener?.onProcessFrame(imageProxy.toBitmap())
+                                imageProxy.close()
+                            }
+                        }
                     }
 
                 val useCases = arrayListOf<UseCase>().apply {
@@ -142,6 +149,7 @@ class CameraCaptureManager private constructor(
                             add(imageCapture)
                         }
 
+                        CaptureType.BOUNDARY_OBJECT,
                         CaptureType.VIDEO -> {
                             add(preview)
 //                            add(videoCapture)
@@ -163,13 +171,6 @@ class CameraCaptureManager private constructor(
             }
         }
         return cameraPreview
-    }
-
-    override fun analyze(imageProxy: ImageProxy) {
-//        CoroutineScope(Dispatchers.IO).launch {
-//            delay(700)
-        listener?.onProcessFrame(imageProxy)
-//        }
     }
 
     fun updatePreview(previewState: PreviewState, previewView: View) {
