@@ -22,9 +22,8 @@ fun BoundingBoxOverlay(
     modifier: Modifier = Modifier,
     boundingBoxes: List<Rect>,
     imageProxySize: android.util.Size,
-    previewViewSize: android.util.Size,
     boxColor: Color = Color.Red,
-    boxStrokeWidth: Float = 2.dp.value
+    boxStrokeWidth: Float = 4.dp.value
 ) {
     Layout(
         modifier = modifier,
@@ -35,11 +34,6 @@ fun BoundingBoxOverlay(
                     val scaleX = size.width / imageProxySize.width.toFloat()
                     val scaleY = size.height / imageProxySize.height.toFloat()
 
-//                    Log.d("test", "SCREEN SIZE: ${previewViewSize}." +
-//                            "\nIMAGE SIZE: ${imageProxySize}" +
-//                            "\nCANVAS SIZE: ${this.size}" +
-//                            "\nSCALE_X: ${scaleX}, SCALE_Y: ${scaleY}")
-
                     for (box in boundingBoxes) {
                         val scaledBox = Rect(
                             maxOf(0, (box.left * scaleX).toInt()),
@@ -47,9 +41,6 @@ fun BoundingBoxOverlay(
                             minOf((box.right * scaleX).toInt(), size.width.toInt()),
                             minOf((box.bottom * scaleY).toInt(), size.height.toInt())
                         )
-//
-//                        Log.d("test", "Bounding Box ORIGINAL: $box" +
-//                                "\n Bounding Box SCALED: ${scaledBox}")
 
                         drawRect(
                             color = boxColor,
@@ -83,7 +74,6 @@ fun BoundingBoxOverlayPreview() {
                 Rect(Rect(307, 490 ,412, 698))
             ),
             imageProxySize = PreviewState().size,
-            previewViewSize = PreviewState().size,
         )
     }
 }

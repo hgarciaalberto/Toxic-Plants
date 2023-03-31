@@ -22,6 +22,7 @@ import com.waracle.vision.toxicplants.rotate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 private const val TAG = "RecordingViewModel"
@@ -138,7 +139,7 @@ class CameraViewModel @Inject constructor(
             val filePath = fileManager.createFile("videos", "mp4")
             _effect.emit(Effect.RecordVideo(filePath))
         } catch (exception: IllegalArgumentException) {
-            Log.e(TAG, exception.message, exception)
+            Timber.e(exception, exception.message)
             _effect.emit(Effect.ShowMessage())
         }
     }
@@ -149,7 +150,7 @@ class CameraViewModel @Inject constructor(
 
 
     private fun onRecordingFinished(uri: Uri) {
-        Log.w(TAG, "onRecordingFinished - NO navigation")
+        Timber.w("onRecordingFinished - NO navigation")
         _state.update { it.copy(recordingStatus = RecordingStatus.Idle, recordedLength = 0) }
     }
 
