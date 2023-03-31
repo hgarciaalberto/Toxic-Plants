@@ -20,9 +20,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
@@ -36,8 +34,6 @@ import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
 import com.waracle.vision.toxicplants.camera.boxes.BoundingBoxOverlay
-import com.waracle.vision.toxicplants.camera.boxes.ObjectDetectionView
-import com.waracle.vision.toxicplants.camera.boxes.RectanglesOverlay
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
 import java.util.*
@@ -217,7 +213,6 @@ private fun CameraContent(
         BoundingBoxOverlay(
             boundingBoxes = objectsBoundary,
             imageProxySize = PreviewState().size,
-            previewViewSize = screenSize
         )
     }
 }

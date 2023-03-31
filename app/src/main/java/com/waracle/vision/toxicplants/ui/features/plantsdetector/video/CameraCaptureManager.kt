@@ -27,7 +27,6 @@ import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import kotlinx.coroutines.*
 import java.io.File
 
-@OptIn(DelicateCoroutinesApi::class)
 class CameraCaptureManager private constructor(
     private val builder: Builder
 ) : LifecycleEventObserver, Analyzer {
