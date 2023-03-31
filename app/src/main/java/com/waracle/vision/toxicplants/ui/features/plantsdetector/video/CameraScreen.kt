@@ -35,6 +35,7 @@ import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
 import com.waracle.vision.toxicplants.camera.boxes.BoundingBoxOverlay
+import com.waracle.vision.toxicplants.camera.boxes.ObjectDetectionView
 import com.waracle.vision.toxicplants.camera.boxes.RectanglesOverlay
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
@@ -144,7 +145,7 @@ internal fun CameraScreen(
 
 @Composable
 private fun CameraContent(
-    screenSize: Size,
+    screenSize: android.util.Size,
     message: String,
     objectsBoundary: List<Rect>,
     captureType: CaptureType,
@@ -211,21 +212,20 @@ private fun CameraContent(
             }
         }
 
-        RectanglesOverlay(boundingBoxes = objectsBoundary)
-//        BoundingBoxOverlay(
-//            boundingBoxes = objectsBoundary,
-//            imageProxySize = Size(360f, 780f),
-//            previewSize = screenSize
-//        )
+        BoundingBoxOverlay(
+            boundingBoxes = objectsBoundary,
+            imageProxySize = PreviewState().size,
+            previewViewSize = screenSize
+        )
     }
 }
 
-fun getScreenSize(context: Context): Size {
+fun getScreenSize(context: Context): android.util.Size {
     val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     val display = windowManager.defaultDisplay
     val displayMetrics = DisplayMetrics()
     display.getRealMetrics(displayMetrics)
-    return Size(displayMetrics.widthPixels.toFloat(), displayMetrics.heightPixels.toFloat())
+    return android.util.Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
 }
 
 

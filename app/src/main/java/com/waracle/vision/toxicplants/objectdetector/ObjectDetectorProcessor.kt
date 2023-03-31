@@ -75,7 +75,10 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                             }
                         }
                     }
-                    .addOnFailureListener { Log.i(TAG, it.toString()) }
+                    .addOnFailureListener {
+                        val result = Detector.DetectionResult.ERROR(it.message ?: it.javaClass.simpleName)
+                        continuation.resume(result)
+                    }
                     .addOnCompleteListener {
                         image.close()
                         imageProxy.close()

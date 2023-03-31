@@ -117,7 +117,8 @@ class CameraCaptureManager private constructor(
                     }
 
                 //Create Video Capture use case
-                val recorder = Recorder.Builder().setExecutor(CameraXExecutors.ioExecutor()).build()
+                val recorder = Recorder.Builder().setExecutor(CameraXExecutors.ioExecutor())
+                    .build()
                 videoCapture = VideoCapture.withOutput(recorder)
 
                 //Create an Analyzer use case
