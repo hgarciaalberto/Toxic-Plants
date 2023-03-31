@@ -5,6 +5,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.net.Uri
+import android.util.DisplayMetrics
+import android.view.WindowManager
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageProxy

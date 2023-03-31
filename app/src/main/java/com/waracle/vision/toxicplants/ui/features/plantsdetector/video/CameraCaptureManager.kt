@@ -26,6 +26,7 @@ import com.waracle.vision.toxicplants.toBitmap
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.File
 
 @OptIn(DelicateCoroutinesApi::class)

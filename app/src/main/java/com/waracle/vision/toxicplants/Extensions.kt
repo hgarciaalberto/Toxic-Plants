@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import com.waracle.vision.toxicplants.ui.features.utils.BitmapUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.concurrent.Executor
