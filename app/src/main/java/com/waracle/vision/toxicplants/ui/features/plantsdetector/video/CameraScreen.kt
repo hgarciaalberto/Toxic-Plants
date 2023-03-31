@@ -213,7 +213,6 @@ private fun CameraContent(
         BoundingBoxOverlay(
             boundingBoxes = objectsBoundary,
             imageProxySize = PreviewState().size,
-            previewViewSize = screenSize
         )
     }
 }

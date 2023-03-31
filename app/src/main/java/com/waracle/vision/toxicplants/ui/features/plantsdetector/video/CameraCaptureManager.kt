@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 
-@OptIn(DelicateCoroutinesApi::class)
 class CameraCaptureManager private constructor(
     private val builder: Builder
 ) : LifecycleEventObserver, Analyzer {

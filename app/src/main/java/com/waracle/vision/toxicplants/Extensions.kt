@@ -73,62 +73,7 @@ fun Bitmap.rotate(degrees: Float = 90f): Bitmap {
     return rotatedBitmap
 }
 
-//@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
-//fun ImageProxy.toBitmap(): Bitmap? {
-//    val image: Image = this.image ?: return null
-//
-//    val buffer: ByteBuffer = image.planes[0].buffer
-//    val bytes = ByteArray(buffer.remaining())
-//    buffer.get(bytes)
-//    val width: Int = image.width
-//    val height: Int = image.height
-//    val format: Int = image.format
-//    image.close()
-//
-//    var bitmap: Bitmap? = null
-//    when (format) {
-//        ImageFormat.JPEG -> {
-//            bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-//        }
-//        ImageFormat.YUV_420_888, ImageFormat.NV21, ImageFormat.YUY2 -> {
-//            val yuvImage = YuvImage(bytes, format, width, height, null)
-//            val outputStream = ByteArrayOutputStream()
-//            yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, outputStream)
-//            val jpegArray = outputStream.toByteArray()
-//            bitmap = BitmapFactory.decodeByteArray(jpegArray, 0, jpegArray.size)
-//            outputStream.close()
-//        }
-//    }
-//    return bitmap
-//}
 @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 fun ImageProxy.toBitmap(): Bitmap? {
     return BitmapUtils.getBitmap(this)
 }
-
-//fun ImageProxy.toBitmap(): Bitmap? {
-//    val nv21Buffer = planes[0].buffer
-//    val ySize = nv21Buffer.remaining()
-//    val uvSize = planes[1].buffer.remaining() + planes[2].buffer.remaining()
-//    val bufferSize = ySize + uvSize
-//
-//    val data = ByteArray(bufferSize)
-//    nv21Buffer.get(data, 0, ySize)
-//
-//    val uvBuffer = planes[2].buffer.duplicate()
-//    val uv = ByteArray(uvSize)
-//    uvBuffer.get(uv, 0, planes[2].buffer.remaining())
-//    var i = 0
-//    while (i < uvSize - 1) {
-//        data[ySize + i] = uv[i + 1]
-//        data[ySize + i + 1] = uv[i]
-//        i += 2
-//    }
-//
-//    val yuvImage = YuvImage(data, ImageFormat.NV21, width, height, null)
-//    val outputStream = ByteArrayOutputStream()
-//    yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, outputStream)
-//    val jpegByteArray = outputStream.toByteArray()
-//
-//    return BitmapFactory.decodeByteArray(jpegByteArray, 0, jpegByteArray.size)
-//}
