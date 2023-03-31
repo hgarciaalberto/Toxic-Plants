@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.waracle.vision.googledemodetection.objectdetection;
+package com.waracle.vision.googledemodetection.googledemodetection.objectdetection;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

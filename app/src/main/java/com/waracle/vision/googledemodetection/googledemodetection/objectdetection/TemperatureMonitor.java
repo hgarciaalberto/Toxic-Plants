@@ -1,4 +1,4 @@
-package com.waracle.vision.googledemodetection.objectdetection;
+package com.waracle.vision.googledemodetection.googledemodetection.objectdetection;
 
 import android.content.Context;
 import android.hardware.Sensor;

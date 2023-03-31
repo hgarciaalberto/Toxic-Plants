@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.waracle.vision.googledemodetection.objectdetection;
+package com.waracle.vision.googledemodetection.googledemodetection.objectdetection;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -31,7 +31,7 @@ import android.view.WindowManager;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
 import com.google.android.gms.common.images.Size;
-import com.waracle.vision.googledemodetection.objectdetection.FrameMetadata;import com.waracle.vision.googledemodetection.objectdetection.GraphicOverlay;import com.waracle.vision.googledemodetection.objectdetection.VisionImageProcessor;import com.waracle.vision.googledemodetection.objectdetection.preference.PreferenceUtils;
+import com.waracle.vision.googledemodetection.googledemodetection.objectdetection.preference.PreferenceUtils;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-package com.waracle.vision.googledemodetection.objectdetection.preference;
+package com.waracle.vision.googledemodetection.googledemodetection.objectdetection.preference;
 
 import android.hardware.Camera;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
-import android.widget.Toast;
 
 import androidx.annotation.StringRes;
 
+import com.waracle.vision.googledemodetection.googledemodetection.objectdetection.CameraSource;
 import com.waracle.vision.toxicplants.R;
-import com.waracle.vision.googledemodetection.objectdetection.*;
 
 import java.util.HashMap;
 import java.util.List;

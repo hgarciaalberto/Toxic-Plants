@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.waracle.vision.googledemodetection.objectdetection.preference;
+package com.waracle.vision.googledemodetection.googledemodetection.objectdetection.preference;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -28,9 +28,8 @@ import com.google.android.gms.common.images.Size;
 import com.google.common.base.Preconditions;
 import com.google.mlkit.common.model.LocalModel;
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions;
+import com.waracle.vision.googledemodetection.googledemodetection.objectdetection.CameraSource;
 import com.waracle.vision.toxicplants.R;
-import com.waracle.vision.googledemodetection.objectdetection.CameraSource;
-import com.waracle.vision.googledemodetection.objectdetection.CameraSource.SizePair;
 import com.google.mlkit.vision.objects.ObjectDetectorOptionsBase.DetectorMode;
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions;
 
@@ -47,7 +46,7 @@ public class PreferenceUtils {
   }
 
   @Nullable
-  public static SizePair getCameraPreviewSizePair(Context context, int cameraId) {
+  public static CameraSource.SizePair getCameraPreviewSizePair(Context context, int cameraId) {
     Preconditions.checkArgument(
         cameraId == CameraSource.CAMERA_FACING_BACK
             || cameraId == CameraSource.CAMERA_FACING_FRONT);
@@ -63,7 +62,7 @@ public class PreferenceUtils {
 
     try {
       SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-      return new SizePair(
+      return new CameraSource.SizePair(
           Size.parseSize(sharedPreferences.getString(previewSizePrefKey, null)),
           Size.parseSize(sharedPreferences.getString(pictureSizePrefKey, null)));
     } catch (Exception e) {

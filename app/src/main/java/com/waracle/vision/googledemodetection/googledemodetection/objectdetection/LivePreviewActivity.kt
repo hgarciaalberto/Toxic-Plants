@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.waracle.vision.googledemodetection.objectdetection
+package com.waracle.vision.googledemodetection.googledemodetection.objectdetection
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -27,8 +27,9 @@ import android.widget.Toast
 import android.widget.ToggleButton
 import com.google.android.gms.common.annotation.KeepName
 import com.google.mlkit.common.model.LocalModel
-import com.waracle.vision.googledemodetection.objectdetection.preference.PreferenceUtils
+import com.waracle.vision.googledemodetection.googledemodetection.objectdetection.preference.PreferenceUtils
 import com.waracle.vision.toxicplants.R
+import com.waracle.vision.googledemodetection.googledemodetection.objectdetection.objectdetector.ObjectDetectorProcessor
 import java.io.IOException
 
 /** Live preview demo for ML Kit APIs. */

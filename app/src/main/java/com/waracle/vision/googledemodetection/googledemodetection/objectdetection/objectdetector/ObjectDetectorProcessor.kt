@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package com.waracle.vision.toxicplants.objectdetection.objectdetector
+package com.waracle.vision.googledemodetection.googledemodetection.objectdetection.objectdetector
 
 import android.content.Context
 import android.util.Log
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.common.InputImage
-import com.waracle.vision.googledemodetection.objectdetection.GraphicOverlay
-import com.waracle.vision.googledemodetection.objectdetection.kotlin.VisionProcessorBase
+import com.waracle.vision.googledemodetection.googledemodetection.objectdetection.GraphicOverlay
 import com.google.mlkit.vision.objects.DetectedObject
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.ObjectDetector
 import com.google.mlkit.vision.objects.ObjectDetectorOptionsBase
+import com.waracle.vision.toxicplants.objectdetection.kotlin.VisionProcessorBase
+import timber.log.Timber
 import java.io.IOException
 
 /** A processor to run object detector.  */
@@ -39,8 +40,7 @@ class ObjectDetectorProcessor(context: Context, options: ObjectDetectorOptionsBa
     try {
       detector.close()
     } catch (e: IOException) {
-      Log.e(
-        TAG,
+      Timber.e(
         "Exception thrown while trying to close object detector!",
         e
       )

@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.waracle.vision.toxicplants.objectdetection.objectdetector
+package com.waracle.vision.googledemodetection.googledemodetection.objectdetection.objectdetector
 
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
-import com.waracle.vision.googledemodetection.objectdetection.GraphicOverlay
-import com.waracle.vision.googledemodetection.objectdetection.GraphicOverlay.Graphic
+import com.waracle.vision.googledemodetection.googledemodetection.objectdetection.GraphicOverlay
+import com.waracle.vision.googledemodetection.googledemodetection.objectdetection.GraphicOverlay.Graphic
 import com.google.mlkit.vision.objects.DetectedObject
 import java.util.Locale
 import kotlin.math.abs
@@ -30,8 +30,8 @@ import kotlin.math.min
 
 /** Draw the detected object info in preview.  */
 class ObjectGraphic constructor(
-  overlay: GraphicOverlay,
-  private val detectedObject: DetectedObject
+    overlay: GraphicOverlay,
+    private val detectedObject: DetectedObject
 ) : Graphic(overlay) {
 
   private val numColors = COLORS.size

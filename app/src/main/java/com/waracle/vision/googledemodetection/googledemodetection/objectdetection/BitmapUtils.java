@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.waracle.vision.googledemodetection.objectdetection;
+package com.waracle.vision.googledemodetection.googledemodetection.objectdetection;
 
 import android.content.ContentResolver;
 import android.graphics.Bitmap;
@@ -34,7 +34,8 @@ import androidx.annotation.RequiresApi;
 import androidx.camera.core.ExperimentalGetImage;
 import androidx.camera.core.ImageProxy;
 import androidx.exifinterface.media.ExifInterface;
-import com.waracle.vision.googledemodetection.objectdetection.FrameMetadata;import java.io.ByteArrayOutputStream;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;

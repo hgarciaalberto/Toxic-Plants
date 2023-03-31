@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.waracle.vision.googledemodetection.objectdetection;
+package com.waracle.vision.googledemodetection.googledemodetection.objectdetection;
 
 import android.app.Application;
 import android.os.Build.VERSION_CODES;

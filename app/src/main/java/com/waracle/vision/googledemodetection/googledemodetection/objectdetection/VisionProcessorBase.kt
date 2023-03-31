@@ -38,8 +38,8 @@ import com.google.android.odml.image.MediaMlImageBuilder
 import com.google.android.odml.image.MlImage
 import com.google.mlkit.common.MlKitException
 import com.google.mlkit.vision.common.InputImage
-import com.waracle.vision.googledemodetection.objectdetection.*
-import com.waracle.vision.googledemodetection.objectdetection.preference.PreferenceUtils
+import com.waracle.vision.googledemodetection.googledemodetection.objectdetection.*
+import com.waracle.vision.googledemodetection.googledemodetection.objectdetection.preference.PreferenceUtils
 import java.lang.Math.max
 import java.lang.Math.min
 import java.nio.ByteBuffer
@@ -130,9 +130,9 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
   // -----------------Code for processing live preview frame from Camera1 API-----------------------
   @Synchronized
   override fun processByteBuffer(
-    data: ByteBuffer?,
-    frameMetadata: FrameMetadata?,
-    graphicOverlay: GraphicOverlay
+      data: ByteBuffer?,
+      frameMetadata: FrameMetadata?,
+      graphicOverlay: GraphicOverlay
   ) {
     latestImage = data
     latestImageMetaData = frameMetadata
@@ -153,9 +153,9 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
   }
 
   private fun processImage(
-    data: ByteBuffer,
-    frameMetadata: FrameMetadata,
-    graphicOverlay: GraphicOverlay
+      data: ByteBuffer,
+      frameMetadata: FrameMetadata,
+      graphicOverlay: GraphicOverlay
   ) {
     val frameStartMs = SystemClock.elapsedRealtime()
     // If live viewport is on (that is the underneath surface view takes care of the camera preview
@@ -246,11 +246,11 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
 
   // -----------------Common processing logic-------------------------------------------------------
   private fun requestDetectInImage(
-    image: InputImage,
-    graphicOverlay: GraphicOverlay,
-    originalCameraImage: Bitmap?,
-    shouldShowFps: Boolean,
-    frameStartMs: Long
+      image: InputImage,
+      graphicOverlay: GraphicOverlay,
+      originalCameraImage: Bitmap?,
+      shouldShowFps: Boolean,
+      frameStartMs: Long
   ): Task<T> {
     return setUpListener(
       detectInImage(image),
@@ -262,11 +262,11 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
   }
 
   private fun requestDetectInImage(
-    image: MlImage,
-    graphicOverlay: GraphicOverlay,
-    originalCameraImage: Bitmap?,
-    shouldShowFps: Boolean,
-    frameStartMs: Long
+      image: MlImage,
+      graphicOverlay: GraphicOverlay,
+      originalCameraImage: Bitmap?,
+      shouldShowFps: Boolean,
+      frameStartMs: Long
   ): Task<T> {
     return setUpListener(
       detectInImage(image),
@@ -278,11 +278,11 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
   }
 
   private fun setUpListener(
-    task: Task<T>,
-    graphicOverlay: GraphicOverlay,
-    originalCameraImage: Bitmap?,
-    shouldShowFps: Boolean,
-    frameStartMs: Long
+      task: Task<T>,
+      graphicOverlay: GraphicOverlay,
+      originalCameraImage: Bitmap?,
+      shouldShowFps: Boolean,
+      frameStartMs: Long
   ): Task<T> {
     val detectorStartMs = SystemClock.elapsedRealtime()
     return task
