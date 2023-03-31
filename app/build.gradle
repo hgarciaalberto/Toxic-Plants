@@ -102,7 +102,9 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite-metadata:0.2.0'
 
     //Object detection
+    implementation 'com.google.mlkit:object-detection:17.0.0'
     implementation 'com.google.mlkit:object-detection-custom:17.0.0'
+    implementation 'com.google.guava:guava:27.1-android'
 
     // Dagger - Hilt
     implementation 'com.google.dagger:hilt-android:2.44'
