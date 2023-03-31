@@ -24,7 +24,8 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.waracle.vision.toxicplants.takePicture
 import com.waracle.vision.toxicplants.toBitmap
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
-import kotlinx.coroutines.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.launch
 import java.io.File
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -158,7 +159,7 @@ class CameraCaptureManager private constructor(
                             add(imageAnalyzer)
                         }
                         else -> {
-                            Log.i("CameraCaptureManager", "Type not supported")
+                            Timber.i("Type not supported")
                         }
                     }
                 }.toTypedArray()

@@ -1,9 +1,9 @@
 package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.content.Context
-import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -25,7 +25,7 @@ class FileManager @Inject constructor(private val context: Context) {
                 Locale.getDefault()
             ).format(System.currentTimeMillis())
             return@withContext File(getPrivateFileDirectory(directory), "$timestamp.$ext").canonicalPath.also {
-                Log.d("FileManager", "Video Path: $it")
+                Timber.d("Video Path: $it")
             }
         }
     }

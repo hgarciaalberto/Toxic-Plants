@@ -5,9 +5,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.net.Uri
-import android.util.DisplayMetrics
-import android.util.Log
-import android.view.WindowManager
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageProxy
@@ -20,9 +17,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
@@ -36,10 +31,9 @@ import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
 import com.waracle.vision.toxicplants.camera.boxes.BoundingBoxOverlay
-import com.waracle.vision.toxicplants.camera.boxes.ObjectDetectionView
-import com.waracle.vision.toxicplants.camera.boxes.RectanglesOverlay
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
+import timber.log.Timber
 import java.util.*
 
 
@@ -133,7 +127,7 @@ internal fun CameraScreen(
             when (it) {
                 is CameraViewModel.Effect.NavigateBack -> navigation.navigateUp()
                 is CameraViewModel.Effect.ShowMessage -> {
-                    Log.i("CameraScreen", "message: ${it.message}")
+                    Timber.i("message: ${it.message}")
                 }
                 is CameraViewModel.Effect.RecordVideo -> captureManager.startRecording(it.filePath)
                 is CameraViewModel.Effect.SavePicture -> captureManager.savePicture()
@@ -192,7 +186,7 @@ private fun CameraContent(
 
                     CameraIcon(
                         modifier = Modifier
-                            .size(90.dp)
+                            .size(100.dp)
                             .align(Alignment.BottomCenter)
                             .padding(20.dp, bottom = 40.dp),
                         onTapped = { onEvent(CameraViewModel.Event.PictureTapped) }
