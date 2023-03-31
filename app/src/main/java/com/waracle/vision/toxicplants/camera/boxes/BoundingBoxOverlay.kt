@@ -32,26 +32,24 @@ fun BoundingBoxOverlay(
             Canvas(
                 modifier = Modifier.fillMaxSize(),
                 onDraw = {
-                    val scaleX = previewViewSize.width / imageProxySize.width
-                    val scaleY = previewViewSize.height / imageProxySize.height
-                    Log.d("test", "SCREEN SIZE: ${previewViewSize}." +
-                            "\nIMAGE SIZE: ${imageProxySize}" +
-                            "\nCANVAS SIZE: ${this.size}" +
-                            "\nSCALE_X: ${scaleX}, SCALE_Y: ${scaleY}")
+                    val scaleX = size.width / imageProxySize.width.toFloat()
+                    val scaleY = size.height / imageProxySize.height.toFloat()
 
-                    val offsetX = (size.width - imageProxySize.width * scaleX) / 2f
-                    val offsetY = (size.height - imageProxySize.height * scaleY) / 2f
+//                    Log.d("test", "SCREEN SIZE: ${previewViewSize}." +
+//                            "\nIMAGE SIZE: ${imageProxySize}" +
+//                            "\nCANVAS SIZE: ${this.size}" +
+//                            "\nSCALE_X: ${scaleX}, SCALE_Y: ${scaleY}")
 
                     for (box in boundingBoxes) {
                         val scaledBox = Rect(
-                            maxOf(0, (box.left * scaleX + offsetX).toInt()),
-                            maxOf(0, (box.top * scaleY + offsetY).toInt()),
-                            minOf((box.right * scaleX + offsetX).toInt(), size.width.toInt()),
-                            minOf((box.bottom * scaleY + offsetY).toInt(), size.height.toInt())
+                            maxOf(0, (box.left * scaleX).toInt()),
+                            maxOf(0, (box.top * scaleY).toInt()),
+                            minOf((box.right * scaleX).toInt(), size.width.toInt()),
+                            minOf((box.bottom * scaleY).toInt(), size.height.toInt())
                         )
-
-                        Log.d("test", "Bounding Box ORIGINAL: $box" +
-                                "\n Bounding Box SCALED: ${scaledBox}")
+//
+//                        Log.d("test", "Bounding Box ORIGINAL: $box" +
+//                                "\n Bounding Box SCALED: ${scaledBox}")
 
                         drawRect(
                             color = boxColor,
@@ -73,6 +71,7 @@ fun BoundingBoxOverlay(
         }
     }
 }
+
 
 
 @Preview(showSystemUi = true, showBackground = true, device = PIXEL_4_XL)
