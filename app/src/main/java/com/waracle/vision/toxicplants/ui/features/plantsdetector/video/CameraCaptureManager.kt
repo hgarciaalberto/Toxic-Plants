@@ -1,6 +1,5 @@
 package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
-
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
@@ -23,10 +22,12 @@ import androidx.core.util.Consumer
 import androidx.lifecycle.*
 import com.google.common.util.concurrent.ListenableFuture
 import com.waracle.vision.toxicplants.takePicture
+import com.waracle.vision.toxicplants.toBitmap
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.File
 
+@OptIn(DelicateCoroutinesApi::class)
 class CameraCaptureManager private constructor(
     private val builder: Builder
 ) : LifecycleEventObserver, Analyzer {
@@ -132,7 +133,14 @@ class CameraCaptureManager private constructor(
                         build()
                     }
                     .apply {
-                        setAnalyzer(CameraXExecutors.ioExecutor(), this@CameraCaptureManager)
+                        setAnalyzer(CameraXExecutors.ioExecutor()) { imageProxy ->
+                            if (builder.captureType == CaptureType.BOUNDARY_OBJECT)
+                                listener?.onProcessFrame(imageProxy)
+                            else {
+                                listener?.onProcessFrame(imageProxy.toBitmap())
+                                imageProxy.close()
+                            }
+                        }
                     }
 
                 val useCases = arrayListOf<UseCase>().apply {
@@ -143,6 +151,7 @@ class CameraCaptureManager private constructor(
                             add(imageCapture)
                         }
 
+                        CaptureType.BOUNDARY_OBJECT,
                         CaptureType.VIDEO -> {
                             add(preview)
 //                            add(videoCapture)

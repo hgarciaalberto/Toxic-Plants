@@ -9,6 +9,7 @@ import com.waracle.vision.toxicplants.ui.features.plantsdetector.video.CameraScr
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 
 @Composable
+@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 fun AppNavigation() {
     val navController = rememberNavController()
 
@@ -23,8 +24,8 @@ fun AppNavigation() {
         composable(route = AppScreens.DetectPlantVideo.route) {
             CameraScreen(navController, CaptureType.VIDEO)
         }
-
         composable(route = AppScreens.DetectModelObjects.route) {
+            CameraScreen(navController, CaptureType.BOUNDARY_OBJECT)
         }
 
         composable(route = AppScreens.OpenCVHelloWorld.route) {

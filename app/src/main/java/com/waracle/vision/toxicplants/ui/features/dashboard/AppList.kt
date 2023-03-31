@@ -26,12 +26,12 @@ fun AppList(navController: NavController) {
                 navController.navigate(AppScreens.DetectPlantVideo.route)
             }
         )
-//        ItemList(
-//            "Detect Object from Model",
-//            onClick = {
-//                navController.navigate(AppScreens.DetectModelObjects.route)
-//            }
-//        )
+        ItemList(
+            "Detect Object Boundaries",
+            onClick = {
+                navController.navigate(AppScreens.DetectModelObjects.route)
+            }
+        )
 //        ItemList(
 //            "OpenCV Hello World",
 //            onClick = {

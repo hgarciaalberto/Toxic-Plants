@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +41,7 @@ import com.waracle.vision.toxicplants.camera.boxes.RectanglesOverlay
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
 import java.util.*
+
 
 @OptIn(ExperimentalPermissionsApi::class)
 @ExperimentalGetImage
@@ -82,10 +84,10 @@ internal fun CameraScreen(
                 cameraViewModel.onEvent(CameraViewModel.Event.Error(throwable))
             }
 
-            override fun onProcessFrame(bitmap: Any?) {
-                when (bitmap) {
-                    is Bitmap -> cameraViewModel.analiseImage(bitmap)
-                    is ImageProxy -> cameraViewModel.analiseImageProxy(bitmap)
+            override fun onProcessFrame(image: Any?) {
+                when (image) {
+                    is Bitmap -> cameraViewModel.analiseImage(image)
+                    is ImageProxy -> cameraViewModel.analiseImageProxy(image)
                 }
             }
 
@@ -343,7 +345,8 @@ internal fun RecordFooter(
                 CameraRecordIcon(
                     modifier = Modifier.align(Alignment.Center),
                     onTapped = when (captureType) {
-                        CaptureType.VIDEO -> onRecordTapped
+                        CaptureType.VIDEO,
+                        CaptureType.BOUNDARY_OBJECT -> onRecordTapped
                         CaptureType.IMAGE -> onPictureTapped
                     }
                 )
