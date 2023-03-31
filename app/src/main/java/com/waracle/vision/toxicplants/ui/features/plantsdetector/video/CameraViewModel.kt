@@ -3,17 +3,20 @@
 package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.net.Uri
-import androidx.camera.core.CameraInfo
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.TorchState
+import android.util.Log
+import androidx.camera.core.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
 import com.waracle.vision.toxicplants.R
+import com.waracle.vision.toxicplants.objectdetector.Detector
+import com.waracle.vision.toxicplants.objectdetector.InfoMessage.Companion.toInfoMessage
+import com.waracle.vision.toxicplants.objectdetector.Message
+import com.waracle.vision.toxicplants.objectdetector.ObjectDetectorProcessor
 import com.waracle.vision.toxicplants.plantdetector.PlantDetector
 import com.waracle.vision.toxicplants.rotate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,11 +27,13 @@ import javax.inject.Inject
 
 private const val TAG = "RecordingViewModel"
 
+@ExperimentalGetImage
 @HiltViewModel
 class CameraViewModel @Inject constructor(
     private val fileManager: FileManager,
     val permissionsHandler: PermissionsHandler,
-    val plantDetector: PlantDetector
+    val plantDetector: PlantDetector,
+    val objectDetector: ObjectDetectorProcessor
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(State())
@@ -37,8 +42,10 @@ class CameraViewModel @Inject constructor(
     private val _effect = MutableSharedFlow<Effect>()
     val effect: SharedFlow<Effect> = _effect
 
-    private val _permissionMessage = MutableStateFlow("Waiting")
-    val permissionMessage: StateFlow<String> = _permissionMessage
+    private val _permissionMessage = MutableStateFlow<Message>("Waiting".toInfoMessage())
+    val permissionMessage: StateFlow<Message> = _permissionMessage
+
+    val objectsBoundary: MutableStateFlow<List<Rect>> = MutableStateFlow(listOf())
 
     init {
         permissionsHandler
@@ -48,8 +55,8 @@ class CameraViewModel @Inject constructor(
             }
             .catch {
                 viewModelScope.launch {
-                    _permissionMessage.emit(it.message ?: "Permission exception")
-                    Timber.e(it, it.message)
+                    _permissionMessage.emit((it.message ?: "Permission exception").toInfoMessage())
+                    Log.e(TAG, it.message, it)
                 }
             }
             .launchIn(viewModelScope)
@@ -186,9 +193,16 @@ class CameraViewModel @Inject constructor(
     }
 
     fun analiseImage(bitmap: Bitmap) = viewModelScope.launch {
-        _permissionMessage.emit(plantDetector.processImage(bitmap.rotate()))
+        _permissionMessage.emit(plantDetector.processImage(bitmap.rotate()).toInfoMessage())
     }
 
+    fun analiseImageProxy(imageProxy: ImageProxy) = viewModelScope.launch {
+        val result = objectDetector.processImage(imageProxy)
+        _permissionMessage.emit(result)
+        if(result is Detector.DetectionResult.SUCCESS && result.bounds != null) {
+            objectsBoundary.value = listOf(result.bounds)
+        }
+    }
 
     data class State(
         val lens: Int? = null,

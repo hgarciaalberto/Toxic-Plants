@@ -1,10 +1,15 @@
 package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
 import android.Manifest
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.net.Uri
-import android.util.Size
+import android.util.DisplayMetrics
+import android.view.WindowManager
 import androidx.camera.core.CameraInfo
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.TorchState
 import androidx.camera.core.TorchState.OFF
 import androidx.camera.core.TorchState.ON
@@ -27,12 +32,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
+import com.waracle.vision.toxicplants.camera.boxes.BoundingBoxOverlay
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
 import timber.log.Timber
 import java.util.*
 
+
 @OptIn(ExperimentalPermissionsApi::class)
+@ExperimentalGetImage
 @Composable
 internal fun CameraScreen(
     navigation: NavController,
@@ -42,12 +50,16 @@ internal fun CameraScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    val screenSize = getScreenSize(context = context)
+
     val state by cameraViewModel.state.collectAsState()
     val permissionMessage by cameraViewModel.permissionMessage.collectAsStateWithLifecycle()
     val detectionMessage by cameraViewModel.plantDetector.message.collectAsStateWithLifecycle()
+    val objectBoundary by cameraViewModel.objectsBoundary.collectAsStateWithLifecycle()
+
 
     val listener = remember(cameraViewModel) {
-        object : CameraCaptureManager.Listener {
+        @ExperimentalGetImage object : CameraCaptureManager.Listener {
             override fun onInitialised(cameraLensInfo: HashMap<Int, CameraInfo>) {
                 cameraViewModel.onEvent(CameraViewModel.Event.CameraInitialized(cameraLensInfo))
             }
@@ -68,8 +80,11 @@ internal fun CameraScreen(
                 cameraViewModel.onEvent(CameraViewModel.Event.Error(throwable))
             }
 
-            override fun onProcessFrame(bitmap: Bitmap?) {
-                bitmap?.let { cameraViewModel.analiseImage(it) }
+            override fun onProcessFrame(image: Any?) {
+                when (image) {
+                    is Bitmap -> cameraViewModel.analiseImage(image)
+                    is ImageProxy -> cameraViewModel.analiseImageProxy(image)
+                }
             }
 
             override fun onTakePicture(bitmap: Bitmap?) {
@@ -91,10 +106,12 @@ internal fun CameraScreen(
 
     CompositionLocalProvider(LocalCameraCaptureManager provides captureManager) {
         CameraContent(
-            message = if (permissionMessage.isNotBlank())
+            screenSize = screenSize,
+            message = if (permissionMessage.toString().isNotBlank())
                 "$permissionMessage"
             else
                 "$detectionMessage",
+            objectsBoundary = objectBoundary,
             captureType = captureType,
             allPermissionsGranted = state.multiplePermissionsState?.allPermissionsGranted ?: false,
             cameraLens = state.lens,
@@ -126,7 +143,9 @@ internal fun CameraScreen(
 
 @Composable
 private fun CameraContent(
+    screenSize: android.util.Size,
     message: String,
+    objectsBoundary: List<Rect>,
     captureType: CaptureType,
     allPermissionsGranted: Boolean,
     cameraLens: Int?,
@@ -142,6 +161,7 @@ private fun CameraContent(
             onEvent(CameraViewModel.Event.PermissionRequired)
         }
     } else {
+
         Box(modifier = Modifier.fillMaxSize()) {
 
             cameraLens?.let {
@@ -189,8 +209,22 @@ private fun CameraContent(
                 }
             }
         }
+
+        BoundingBoxOverlay(
+            boundingBoxes = objectsBoundary,
+            imageProxySize = PreviewState().size,
+        )
     }
 }
+
+fun getScreenSize(context: Context): android.util.Size {
+    val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    val display = windowManager.defaultDisplay
+    val displayMetrics = DisplayMetrics()
+    display.getRealMetrics(displayMetrics)
+    return android.util.Size(displayMetrics.widthPixels, displayMetrics.heightPixels)
+}
+
 
 @Composable
 internal fun CaptureHeader(
@@ -306,7 +340,8 @@ internal fun RecordFooter(
                 CameraRecordIcon(
                     modifier = Modifier.align(Alignment.Center),
                     onTapped = when (captureType) {
-                        CaptureType.VIDEO -> onRecordTapped
+                        CaptureType.VIDEO,
+                        CaptureType.BOUNDARY_OBJECT -> onRecordTapped
                         CaptureType.IMAGE -> onPictureTapped
                     }
                 )
@@ -359,7 +394,7 @@ private fun CameraPreview(
                     PreviewState(
                         cameraLens = lens,
                         torchState = torchState,
-                        size = Size(this.minWidth.value.toInt(), this.maxHeight.value.toInt()),
+                        size = android.util.Size(this.minWidth.value.toInt(), this.maxHeight.value.toInt()),
                     )
                 )
             },
