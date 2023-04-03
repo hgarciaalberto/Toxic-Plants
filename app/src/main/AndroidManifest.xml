@@ -26,7 +26,7 @@
         android:theme="@style/Theme.ToxicPlants"
         tools:targetApi="31">
 
-    <activity
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.ToxicPlants">
@@ -36,6 +36,11 @@
             </intent-filter>
         </activity>
 
+        <activity android:name="com.waracle.vision.googledemodetection.googledemodetection.objectdetection.LivePreviewActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme">
+
+        </activity>
     </application>
 
 </manifest>
