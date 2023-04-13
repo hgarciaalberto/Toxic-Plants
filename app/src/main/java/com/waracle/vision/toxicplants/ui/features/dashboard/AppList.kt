@@ -2,6 +2,7 @@ package com.waracle.vision.toxicplants.ui.features.dashboard
 
 import android.content.Intent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -15,7 +16,7 @@ import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
 
 @Composable
 fun AppList(navController: NavController) {
-    Column(modifier = Modifier.padding(20.dp)) {
+    val content: @Composable() (ColumnScope.() -> Unit) = {
         ItemList(
             "Detect Plants on Picture",
             onClick = {
@@ -29,7 +30,7 @@ fun AppList(navController: NavController) {
             }
         )
         ItemList(
-            "Detect Object Boundaries",
+            "TFLite + Detect Object Boundaries",
             onClick = {
                 navController.navigate(AppScreens.DetectModelObjects.route)
             }
@@ -41,13 +42,20 @@ fun AppList(navController: NavController) {
                 navController.context.startActivity(intent)
             }
         )
-//        ItemList(
-//            "OpenCV Hello World",
-//            onClick = {
-//                navController.navigate(AppScreens.OpenCVHelloWorld.route)
-//            }
-//        )
+        ItemList(
+            "OpenCV Detect Object Boundaries",
+            onClick = {
+                navController.navigate(AppScreens.OpenCVHelloWorld.route)
+            }
+        )
+        ItemList(
+            "MobilenetCCDN Detect Object Boundaries",
+            onClick = {
+                navController.navigate(AppScreens.DetectObjectsCncd.route)
+            }
+        )
     }
+    Column(modifier = Modifier.padding(20.dp), content = content)
 }
 
 

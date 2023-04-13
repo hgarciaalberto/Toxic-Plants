@@ -98,7 +98,10 @@ class CameraCaptureManager private constructor(
      * Connect the Preview to the PreviewView.
      */
     @SuppressLint("RestrictedApi")
-    fun showPreview(previewState: PreviewState, cameraPreview: PreviewView = getCameraPreview()): View {
+    fun showPreview(
+        previewState: PreviewState,
+        cameraPreview: PreviewView = getCameraPreview()
+    ): View {
         getLifeCycleOwner().lifecycleScope.launch {
             // repeatOnLifecycle will restart the coroutine when the lifecycle is resumed
             getLifecycle().repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -135,11 +138,16 @@ class CameraCaptureManager private constructor(
                     }
                     .apply {
                         setAnalyzer(CameraXExecutors.ioExecutor()) { imageProxy ->
-                            if (builder.captureType == CaptureType.BOUNDARY_OBJECT)
-                                listener?.onProcessFrame(imageProxy)
-                            else {
-                                listener?.onProcessFrame(imageProxy.toBitmap())
-                                imageProxy.close()
+                            when (builder.captureType) {
+                                CaptureType.BOUNDARY_OBJECT_OpenCV,
+                                CaptureType.BOUNDARY_OBJECT_Cncd,
+                                CaptureType.BOUNDARY_OBJECT_TFLite -> {
+                                    listener?.onProcessFrame(imageProxy)
+                                }
+                                else -> {
+                                    listener?.onProcessFrame(imageProxy.toBitmap())
+                                    imageProxy.close()
+                                }
                             }
                         }
                     }
@@ -148,14 +156,14 @@ class CameraCaptureManager private constructor(
                     when (builder.captureType) {
                         CaptureType.IMAGE -> {
                             add(preview)
-//                            add(imageAnalyzer)
                             add(imageCapture)
                         }
 
-                        CaptureType.BOUNDARY_OBJECT,
+                        CaptureType.BOUNDARY_OBJECT_OpenCV,
+                        CaptureType.BOUNDARY_OBJECT_TFLite,
+                        CaptureType.BOUNDARY_OBJECT_Cncd,
                         CaptureType.VIDEO -> {
                             add(preview)
-//                            add(videoCapture)
                             add(imageAnalyzer)
                         }
                         else -> {

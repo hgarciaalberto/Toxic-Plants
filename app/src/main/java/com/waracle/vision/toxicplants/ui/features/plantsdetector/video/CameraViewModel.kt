@@ -2,16 +2,18 @@
 
 package com.waracle.vision.toxicplants.ui.features.plantsdetector.video
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.net.Uri
-import android.util.Log
 import androidx.camera.core.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
+import com.waracle.vision.cncddetector.MobileCCDNDetector
+import com.waracle.vision.opencvdetector.OpenCvDetector
 import com.waracle.vision.toxicplants.R
 import com.waracle.vision.toxicplants.objectdetector.Detector
 import com.waracle.vision.toxicplants.objectdetector.InfoMessage.Companion.toInfoMessage
@@ -19,6 +21,7 @@ import com.waracle.vision.toxicplants.objectdetector.Message
 import com.waracle.vision.toxicplants.objectdetector.ObjectDetectorProcessor
 import com.waracle.vision.toxicplants.plantdetector.PlantDetector
 import com.waracle.vision.toxicplants.rotate
+import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -27,13 +30,16 @@ import javax.inject.Inject
 
 private const val TAG = "RecordingViewModel"
 
+@SuppressLint("StaticFieldLeak")
 @ExperimentalGetImage
 @HiltViewModel
 class CameraViewModel @Inject constructor(
     private val fileManager: FileManager,
     val permissionsHandler: PermissionsHandler,
     val plantDetector: PlantDetector,
-    val objectDetector: ObjectDetectorProcessor
+    val objectDetector: ObjectDetectorProcessor,
+    val openCvObjectDetector: OpenCvDetector,
+    val cncdDetector: MobileCCDNDetector
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(State())
@@ -42,12 +48,15 @@ class CameraViewModel @Inject constructor(
     private val _effect = MutableSharedFlow<Effect>()
     val effect: SharedFlow<Effect> = _effect
 
-    private val _permissionMessage = MutableStateFlow<Message>("Waiting".toInfoMessage())
-    val permissionMessage: StateFlow<Message> = _permissionMessage
+    private val _permissionMessage = MutableStateFlow<List<Message>>(listOf("Waiting".toInfoMessage()))
+    val permissionMessage: StateFlow<List<Message>> = _permissionMessage
 
-    val objectsBoundary: MutableStateFlow<List<Rect>> = MutableStateFlow(listOf())
+    //val objectsBoundary: MutableStateFlow<List<Rect>> = MutableStateFlow(listOf())
 
     init {
+        if (!cncdDetector.isInitialised){
+            cncdDetector.init()
+        }
         permissionsHandler
             .state
             .onEach { handlerState ->
@@ -55,8 +64,8 @@ class CameraViewModel @Inject constructor(
             }
             .catch {
                 viewModelScope.launch {
-                    _permissionMessage.emit((it.message ?: "Permission exception").toInfoMessage())
-                    Log.e(TAG, it.message, it)
+                    _permissionMessage.emit(listOf((it.message ?: "Permission exception").toInfoMessage()))
+                    Timber.e(TAG, it.message, it)
                 }
             }
             .launchIn(viewModelScope)
@@ -193,15 +202,27 @@ class CameraViewModel @Inject constructor(
     }
 
     fun analiseImage(bitmap: Bitmap) = viewModelScope.launch {
-        _permissionMessage.emit(plantDetector.processImage(bitmap.rotate()).toInfoMessage())
+        _permissionMessage.emit(listOf(plantDetector.processImage(bitmap.rotate()).toInfoMessage()))
     }
 
-    fun analiseImageProxy(imageProxy: ImageProxy) = viewModelScope.launch {
-        val result = objectDetector.processImage(imageProxy)
-        _permissionMessage.emit(result)
-        if(result is Detector.DetectionResult.SUCCESS && result.bounds != null) {
-            objectsBoundary.value = listOf(result.bounds)
+    fun analiseImageProxy(imageProxy: ImageProxy, type: CaptureType) = viewModelScope.launch {
+        val result: List<Detector.DetectionResult> = when (type) {
+            CaptureType.BOUNDARY_OBJECT_TFLite -> {
+                listOf(objectDetector.processImage(imageProxy))
+            }
+            CaptureType.BOUNDARY_OBJECT_OpenCV -> {
+                listOf(openCvObjectDetector.processImage(imageProxy))
+            }
+            CaptureType.BOUNDARY_OBJECT_Cncd -> {
+                cncdDetector.processImageMultipleResults(imageProxy)
+            }
+            else -> {
+                listOf(Detector.DetectionResult.ERROR("Unknown capture type"))
+            }
         }
+
+        _permissionMessage.emit(result)
+
     }
 
     data class State(

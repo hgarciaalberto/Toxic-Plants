@@ -7,4 +7,5 @@ sealed class AppScreens(val route: String) {
     object DetectPlantVideo : AppScreens("DetectPlantVideo")
     object DetectModelObjects : AppScreens("DetectModelObjects")
     object OpenCVHelloWorld : AppScreens("OpenCVHelloWorld")
+    object DetectObjectsCncd : AppScreens("DetectObjectsCncd")
 }

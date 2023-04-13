@@ -13,6 +13,8 @@ android {
 
     defaultConfig {
         applicationId "com.waracle.vision.toxicplants"
+        archivesBaseName = "$applicationId"
+
         minSdk 24
         targetSdk 33
         versionCode 1
@@ -21,6 +23,11 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
+        }
+
+        ndk {
+            moduleName "ncnn"
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
         }
     }
 
@@ -53,15 +60,26 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+
+    externalNativeBuild {
+        cmake {
+            version "3.10.2"
+            path file('src/main/jni/CMakeLists.txt')
+        }
+    }
 }
 
 dependencies {
 
+    //implementation project(":opencv-sdk")
     // Androidx
     implementation 'androidx.core:core-ktx:1.9.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation 'com.google.android.material:material:1.8.0'
 
+    //open-cv
+    implementation 'com.quickbirdstudios:opencv:4.5.3.0'
+    //implementation 'org.opencv:opencv-android-sdk:4.5.3.0'
     // Compose
     def composeBom = platform('androidx.compose:compose-bom:2023.01.00')
     implementation composeBom

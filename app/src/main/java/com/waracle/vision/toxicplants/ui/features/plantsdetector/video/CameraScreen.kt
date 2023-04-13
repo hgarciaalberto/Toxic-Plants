@@ -33,6 +33,7 @@ import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.waracle.vision.toxicplants.R
 import com.waracle.vision.toxicplants.camera.boxes.BoundingBoxOverlay
+import com.waracle.vision.toxicplants.objectdetector.Detector
 import com.waracle.vision.toxicplants.ui.features.utils.CaptureType
 import com.waracle.vision.toxicplants.ui.theme.ToxicPlantsTheme
 import timber.log.Timber
@@ -55,7 +56,7 @@ internal fun CameraScreen(
     val state by cameraViewModel.state.collectAsState()
     val permissionMessage by cameraViewModel.permissionMessage.collectAsStateWithLifecycle()
     val detectionMessage by cameraViewModel.plantDetector.message.collectAsStateWithLifecycle()
-    val objectBoundary by cameraViewModel.objectsBoundary.collectAsStateWithLifecycle()
+    //val objectBoundary by cameraViewModel.objectsBoundary.collectAsStateWithLifecycle()
 
 
     val listener = remember(cameraViewModel) {
@@ -80,10 +81,10 @@ internal fun CameraScreen(
                 cameraViewModel.onEvent(CameraViewModel.Event.Error(throwable))
             }
 
-            override fun onProcessFrame(image: Any?) {
-                when (image) {
-                    is Bitmap -> cameraViewModel.analiseImage(image)
-                    is ImageProxy -> cameraViewModel.analiseImageProxy(image)
+            override fun onProcessFrame(bitmap: Any?) {
+                when (bitmap) {
+                    is Bitmap -> cameraViewModel.analiseImage(bitmap)
+                    is ImageProxy -> cameraViewModel.analiseImageProxy(bitmap, captureType)
                 }
             }
 
@@ -101,8 +102,12 @@ internal fun CameraScreen(
             .apply { this.listener = listener }
     }
 
-    val permissions = remember { listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO) }
-    HandlePermissionsRequest(permissions = permissions, permissionsHandler = cameraViewModel.permissionsHandler)
+    val permissions =
+        remember { listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO) }
+    HandlePermissionsRequest(
+        permissions = permissions,
+        permissionsHandler = cameraViewModel.permissionsHandler
+    )
 
     CompositionLocalProvider(LocalCameraCaptureManager provides captureManager) {
         CameraContent(
@@ -111,7 +116,7 @@ internal fun CameraScreen(
                 "$permissionMessage"
             else
                 "$detectionMessage",
-            objectsBoundary = objectBoundary,
+            messages = permissionMessage,
             captureType = captureType,
             allPermissionsGranted = state.multiplePermissionsState?.allPermissionsGranted ?: false,
             cameraLens = state.lens,
@@ -145,7 +150,7 @@ internal fun CameraScreen(
 private fun CameraContent(
     screenSize: android.util.Size,
     message: String,
-    objectsBoundary: List<Rect>,
+    messages: List<com.waracle.vision.toxicplants.objectdetector.Message>,
     captureType: CaptureType,
     allPermissionsGranted: Boolean,
     cameraLens: Int?,
@@ -185,7 +190,6 @@ private fun CameraContent(
                 }
 
                 if (captureType == CaptureType.IMAGE) {
-
                     CameraIcon(
                         modifier = Modifier
                             .size(100.dp)
@@ -193,27 +197,30 @@ private fun CameraContent(
                             .padding(20.dp, bottom = 40.dp),
                         onTapped = { onEvent(CameraViewModel.Event.PictureTapped) }
                     )
-
-//                RecordFooter(
-//                    captureType = captureType,
-//                    modifier = Modifier.align(Alignment.BottomStart),
-//                    recordingStatus = recordingStatus,
-//                    showFlipIcon = hasDualCamera,
-//                    onRecordTapped = { onEvent(CameraViewModel.Event.RecordTapped) },
-//                    onPictureTapped = { onEvent(CameraViewModel.Event.PictureTapped) },
-//                    onPauseTapped = { onEvent(CameraViewModel.Event.PauseTapped) },
-//                    onResumeTapped = { onEvent(CameraViewModel.Event.ResumeTapped) },
-//                    onStopTapped = { onEvent(CameraViewModel.Event.StopTapped) },
-//                    onFlipTapped = { onEvent(CameraViewModel.Event.FlipTapped) }
-//                )
                 }
             }
         }
 
-        BoundingBoxOverlay(
-            boundingBoxes = objectsBoundary,
-            imageProxySize = PreviewState().size,
-        )
+        messages.filter {
+            it is Detector.DetectionResult.SUCCESS_SINGLE
+                    || it is Detector.DetectionResult.ResultItem
+        }.mapNotNull {
+            when (it) {
+                is Detector.DetectionResult.ResultItem -> {
+                    it.bound
+                }
+                is Detector.DetectionResult.SUCCESS_SINGLE -> {
+                    it.bounds.first()
+                }
+                else -> null
+            }
+        }
+            .let {
+                BoundingBoxOverlay(
+                    boundingBoxes = it,
+                    imageProxySize = PreviewState().size,
+                )
+            }
     }
 }
 
@@ -341,7 +348,9 @@ internal fun RecordFooter(
                     modifier = Modifier.align(Alignment.Center),
                     onTapped = when (captureType) {
                         CaptureType.VIDEO,
-                        CaptureType.BOUNDARY_OBJECT -> onRecordTapped
+                        CaptureType.BOUNDARY_OBJECT_OpenCV,
+                        CaptureType.BOUNDARY_OBJECT_Cncd,
+                        CaptureType.BOUNDARY_OBJECT_TFLite -> onRecordTapped
                         CaptureType.IMAGE -> onPictureTapped
                     }
                 )
@@ -394,7 +403,10 @@ private fun CameraPreview(
                     PreviewState(
                         cameraLens = lens,
                         torchState = torchState,
-                        size = android.util.Size(this.minWidth.value.toInt(), this.maxHeight.value.toInt()),
+                        size = android.util.Size(
+                            this.minWidth.value.toInt(),
+                            this.maxHeight.value.toInt()
+                        ),
                     )
                 )
             },

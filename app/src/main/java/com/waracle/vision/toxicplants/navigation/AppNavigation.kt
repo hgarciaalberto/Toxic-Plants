@@ -17,7 +17,6 @@ fun AppNavigation() {
         composable(route = AppScreens.AppList.route) {
             AppList(navController)
         }
-
         composable(route = AppScreens.DetectPlantPicture.route) {
             CameraScreen(navController, CaptureType.IMAGE)
         }
@@ -25,10 +24,13 @@ fun AppNavigation() {
             CameraScreen(navController, CaptureType.VIDEO)
         }
         composable(route = AppScreens.DetectModelObjects.route) {
-            CameraScreen(navController, CaptureType.BOUNDARY_OBJECT)
+            CameraScreen(navController, CaptureType.BOUNDARY_OBJECT_TFLite)
         }
-
         composable(route = AppScreens.OpenCVHelloWorld.route) {
+            CameraScreen(navController, CaptureType.BOUNDARY_OBJECT_OpenCV)
+        }
+        composable(route = AppScreens.DetectObjectsCncd.route) {
+            CameraScreen(navController, CaptureType.BOUNDARY_OBJECT_Cncd)
         }
     }
 }

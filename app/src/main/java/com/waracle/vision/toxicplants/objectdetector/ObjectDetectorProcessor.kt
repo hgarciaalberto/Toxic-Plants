@@ -64,10 +64,10 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                                     TAG,
                                     "Detected object with label: $text, confidence: $confidence"
                                 )
-                                val result = Detector.DetectionResult.SUCCESS(
+                                val result = Detector.DetectionResult.SUCCESS_SINGLE(
                                     label = text,
                                     confidence = confidence,
-                                    bounds = clippedBox
+                                    bounds = listOf(clippedBox)
                                 )
                                 continuation.resume(result)
                             }
