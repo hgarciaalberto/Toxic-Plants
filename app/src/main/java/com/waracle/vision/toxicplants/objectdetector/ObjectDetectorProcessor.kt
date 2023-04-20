@@ -9,6 +9,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.ObjectDetector
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -37,14 +38,14 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
     @androidx.camera.core.ExperimentalGetImage
     override suspend fun processImage(imageProxy: ImageProxy): Detector.DetectionResult =
         suspendCoroutine { continuation ->
-            Log.d(TAG, "Image resolution: ${imageProxy.width} x ${imageProxy.height}")
+            Timber.d("Image resolution: ${imageProxy.width} x ${imageProxy.height}")
             val image: Image? = imageProxy.image
             image?.let { img ->
                 val iImage = InputImage
                     .fromMediaImage(img, imageProxy.imageInfo.rotationDegrees)
                 objectDetector.process(iImage)
                     .addOnSuccessListener { detectedObjects ->
-                        Log.d(TAG, "Found objects processImage: ${detectedObjects.size}")
+                        Timber.d("Found objects processImage: ${detectedObjects.size}")
                         detectedObjects.firstOrNull()?.let { detectedObject ->
 
                             val boundingBox: Rect = detectedObject.boundingBox
@@ -60,8 +61,7 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                                 val text = label.text
                                 val index = label.index
                                 val confidence = label.confidence
-                                Log.d(
-                                    TAG,
+                                Timber.d(
                                     "Detected object with label: $text, confidence: $confidence"
                                 )
                                 val result = Detector.DetectionResult.SUCCESS_SINGLE(
@@ -74,7 +74,8 @@ class ObjectDetectorProcessor @Inject constructor() : Detector {
                         }
                     }
                     .addOnFailureListener {
-                        val result = Detector.DetectionResult.ERROR(it.message ?: it.javaClass.simpleName)
+                        val result =
+                            Detector.DetectionResult.ERROR(it.message ?: it.javaClass.simpleName)
                         continuation.resume(result)
                     }
                     .addOnCompleteListener {

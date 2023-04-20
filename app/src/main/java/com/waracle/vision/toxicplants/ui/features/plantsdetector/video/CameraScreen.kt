@@ -204,23 +204,22 @@ private fun CameraContent(
         messages.filter {
             it is Detector.DetectionResult.SUCCESS_SINGLE
                     || it is Detector.DetectionResult.ResultItem
-        }.mapNotNull {
+        }.flatMap {
             when (it) {
                 is Detector.DetectionResult.ResultItem -> {
-                    it.bound
+                    listOf(it.bound)
                 }
                 is Detector.DetectionResult.SUCCESS_SINGLE -> {
-                    it.bounds.first()
+                    it.bounds
                 }
-                else -> null
+                else -> emptyList()
             }
+        }.let {
+            BoundingBoxOverlay(
+                boundingBoxes = it,
+                imageProxySize = PreviewState().size,
+            )
         }
-            .let {
-                BoundingBoxOverlay(
-                    boundingBoxes = it,
-                    imageProxySize = PreviewState().size,
-                )
-            }
     }
 }
 

@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.camera.core.*
 import androidx.camera.core.ImageAnalysis.Analyzer
+import androidx.camera.core.ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888
 import androidx.camera.core.impl.utils.executor.CameraXExecutors
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
@@ -129,6 +130,7 @@ class CameraCaptureManager private constructor(
                 //Create an Analyzer use case
                 val imageAnalyzer = ImageAnalysis.Builder()
                     .apply {
+                        //setOutputImageFormat(OUTPUT_IMAGE_FORMAT_RGBA_8888)
                         setTargetResolution(previewState.size)
                         setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         build()

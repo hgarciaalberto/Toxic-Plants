@@ -1,10 +1,17 @@
 package com.waracle.vision.opencvdetector
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.ImageFormat
 import android.graphics.Rect
+import android.graphics.YuvImage
+import android.media.Image
 import androidx.camera.core.ImageProxy
 import com.waracle.vision.toxicplants.objectdetector.Detector
+import com.waracle.vision.toxicplants.rotate
+import com.waracle.vision.toxicplants.toBitmap
 import dagger.hilt.android.qualifiers.ApplicationContext
+import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.dnn.Dnn
 import org.opencv.dnn.Net
@@ -79,15 +86,25 @@ class OpenCvDetector @Inject constructor(
         }
     }
 
+    @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
     override suspend fun processImage(imageProxy: ImageProxy): Detector.DetectionResult {
         imageProxy.use {
             mNet?.let { net ->
-                val yuvMat = convertYUVtoMat(imageProxy)
+                val bitmap = imageProxy.toBitmap()
+                val mat = Mat()
+                Utils.bitmapToMat(bitmap, mat)
+                //val yuvMat = convertYUVtoMat(imageProxy)
+                //val mat = convertYUVtoMat(imageProxy)
+                //val mat = imageProxy.image?.yuvToRgba()
 
+                val rgb = Mat()
+                Imgproc.cvtColor(mat, rgb, Imgproc.COLOR_RGBA2RGB, 3)
+
+                val testBitmap = rgb.toBitmap()
                 val inputBlob = Dnn.blobFromImage(
-                    yuvMat,
+                    rgb,
                     0.007843,
-                    Size(300.0, 300.0),
+                    Size(imageProxy.width.toDouble(), imageProxy.height.toDouble()),
                     Scalar(127.5, 127.5, 127.5),
                     false
                 )
@@ -95,6 +112,8 @@ class OpenCvDetector @Inject constructor(
                 net.setInput(inputBlob)
 
                 val detectionMat = net.forward()
+
+                //val t2 = detectionMat.toBitmap()
 
                 val cols = detectionMat.cols()
                 val rows = detectionMat.rows()
@@ -147,14 +166,92 @@ class OpenCvDetector @Inject constructor(
         uBuffer.get(nv21, ySize + vSize, uSize)
         val yuv = Mat(img.height + img.height / 2, img.width, CvType.CV_8UC1)
         yuv.put(0, 0, nv21)
+        val test1 = yuv.toBitmap()
         val rgb = Mat()
         Imgproc.cvtColor(yuv, rgb, Imgproc.COLOR_YUV2RGB_NV21, 3)
-        Core.rotate(rgb, rgb, Core.ROTATE_90_CLOCKWISE)
+        val test2 = rgb.toBitmap()
+        //Core.rotate(rgb, rgb, Core.ROTATE_90_CLOCKWISE)
         return rgb
+    }
+
+    fun Image.yuvToRgba(): Mat {
+        val rgbaMat = Mat()
+
+        if (format == ImageFormat.YUV_420_888
+            && planes.size == 3) {
+
+            val chromaPixelStride = planes[1].pixelStride
+
+            if (chromaPixelStride == 2) { // Chroma channels are interleaved
+                assert(planes[0].pixelStride == 1)
+                assert(planes[2].pixelStride == 2)
+                val yPlane = planes[0].buffer
+                val uvPlane1 = planes[1].buffer
+                val uvPlane2 = planes[2].buffer
+                val yMat = Mat(height, width, CvType.CV_8UC1, yPlane)
+                val uvMat1 = Mat(height / 2, width / 2, CvType.CV_8UC2, uvPlane1)
+                val uvMat2 = Mat(height / 2, width / 2, CvType.CV_8UC2, uvPlane2)
+                val addrDiff = uvMat2.dataAddr() - uvMat1.dataAddr()
+                if (addrDiff > 0) {
+                    assert(addrDiff == 1L)
+                    Imgproc.cvtColorTwoPlane(yMat, uvMat1, rgbaMat, Imgproc.COLOR_YUV2RGBA_NV12)
+                } else {
+                    assert(addrDiff == -1L)
+                    Imgproc.cvtColorTwoPlane(yMat, uvMat2, rgbaMat, Imgproc.COLOR_YUV2RGBA_NV21)
+                }
+            } else { // Chroma channels are not interleaved
+                val yuvBytes = ByteArray(width * (height + height / 2))
+                val yPlane = planes[0].buffer
+                val uPlane = planes[1].buffer
+                val vPlane = planes[2].buffer
+
+                yPlane.get(yuvBytes, 0, width * height)
+
+                val chromaRowStride = planes[1].rowStride
+                val chromaRowPadding = chromaRowStride - width / 2
+
+                var offset = width * height
+                if (chromaRowPadding == 0) {
+                    // When the row stride of the chroma channels equals their width, we can copy
+                    // the entire channels in one go
+                    uPlane.get(yuvBytes, offset, width * height / 4)
+                    offset += width * height / 4
+                    vPlane.get(yuvBytes, offset, width * height / 4)
+                } else {
+                    // When not equal, we need to copy the channels row by row
+                    for (i in 0 until height / 2) {
+                        uPlane.get(yuvBytes, offset, width / 2)
+                        offset += width / 2
+                        if (i < height / 2 - 1) {
+                            uPlane.position(uPlane.position() + chromaRowPadding)
+                        }
+                    }
+                    for (i in 0 until height / 2) {
+                        vPlane.get(yuvBytes, offset, width / 2)
+                        offset += width / 2
+                        if (i < height / 2 - 1) {
+                            vPlane.position(vPlane.position() + chromaRowPadding)
+                        }
+                    }
+                }
+
+                val yuvMat = Mat(height + height / 2, width, CvType.CV_8UC1)
+                yuvMat.put(0, 0, yuvBytes)
+                Imgproc.cvtColor(yuvMat, rgbaMat, Imgproc.COLOR_YUV2RGBA_I420, 4)
+            }
+        }
+
+        return rgbaMat
     }
 
     private fun getLabelName(labelId: Int): String {
         // Replace this with your own label mapping
         return "Label $labelId"
+    }
+
+    fun Mat.toBitmap(config: Bitmap.Config = Bitmap.Config.ARGB_8888): Bitmap {
+        val bitmap = Bitmap.createBitmap(this.cols(), this.rows(), config)
+        Utils.matToBitmap(this, bitmap)
+        return bitmap
     }
 }
